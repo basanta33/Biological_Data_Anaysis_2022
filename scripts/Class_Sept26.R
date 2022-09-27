@@ -9,7 +9,8 @@ return(new_data)
 }
 
 drop_na_butterflies <- function(dataset = data){
-
+  no_na_data <- data %>% 
+    drop.na()
   return(no_na_data)
 }
 
