@@ -1,0 +1,146 @@
+---
+title: "Class_Week of Sept 20"
+author: "Basanta Khakurel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Class Notes Sept 21, 2022
+
+# Functions 
+## definition, body and return value
+
+```{r}
+calc_vol <- function(len = 1, width = 1, height = 1){
+  volume <- len * width * height
+  return(volume)
+}
+```
+
+```{r, eval = FALSE}
+calc_vol(45, 23, 45)
+```
+Local scope is where the variables used in the function exists, it doesn't get saved to the Global Environment to save memory 
+
+
+```{r}
+calc_mass_index <- function(weight =1, kg = FALSE, foot_length =1){
+  if (kg == FALSE){
+    weight <- weight*.454
+  }
+  mass_index <- weight/foot_length
+  return(mass_index)
+}
+```
+
+```{r}
+calc_mass_index <- function(weight =1, foot_length =1){
+  mass_index <- (weight*.454)/foot_length
+  return(mass_index)
+}
+```
+
+
+```
+calc_density <- function(mass = NA, unit_m = c("kg", "lbs"), volume = NA, unit_v = c("cm3, m3, in3, mm3")){
+  if (unit_m == "lbs"){
+    mass <- mass*0.454
+  }
+  if (unit_v == "cm3"){
+    volume <- volume/1000000
+  } else if (unit_v == "in3"){
+      volume <- volume/61020
+  } else if (unit_V == "mm3"){
+      volume <- volume/1000000000
+    }
+  density <- mass/volume
+  return(density)
+}
+```
+
+
+```{r}
+calc_mass <- function(vol){
+  mass <- 2.65 * vol^0.9
+  return(mass)
+}
+```
+
+```{r}
+cal_den <- function(len =1, widt=1, height=1){
+  vol <- calc_vol(len, widt, height)
+  mass <- calc_mass(vol)
+  density <- mass/vol
+  return(density)
+}
+```
+---
+### Testing or Code Reliability
+
+*What is a good number?
++ bounding (positive/negative, decimals)
++ Integer or Double
++ Precision
+
+*What is a good density?
++ density < volume
++ is relative to mass
+
+#### This will test the accuracy/reliability of the function
+```{r}
+cal_den <- function(len =1, widt=1, height=1){
+  vol <- calc_vol(len, widt, height)
+  mass <- calc_mass(vol)
+  density <- mass/vol
+  if (density > 0){
+    return(density)
+  } else {
+    print("Density impossibly small! Check your inputs.")
+  }
+}
+```
+
+
+
+```{r}
+#this code checks for math errors
+cal_den <- function(len =1, widt=1, height=1){
+  vol <- calc_vol(len, widt, height)
+  mass <- calc_mass(vol)
+  density <- mass*vol
+  if (density < vol){
+    return(density)
+  } else {
+    print("Density is larger than volume! Check your inputs.")
+  }
+}
+```
+
+
+`data_cleaning` function: reads a data frame, some data cleaning, return the cleaned data 
+```{r}
+data_cleaning <- function(path_to_data){
+  data <- read_csv(path_to_data)
+  #return(View(data))
+  data_clean <- na.omit(data)
+  if (sum(is.na(data_clean)) == 0) {
+    return(data_clean)
+  } else {
+    print("NAs still present!!")
+  }
+}
+```
+
+```{r}
+#data_cleaning("../data/portal_data_joined.csv")
+```
+What is a good way to test that it worked?
+
+```anyNA```
+
+
+https://docs.ropensci.org/treedata.table/
+Look at Development, Maintainance and Peer Review
