@@ -1,0 +1,74 @@
+---
+title: "Homework Two"
+output: html_document
+---
+
+# Homework Two: Due Sept. 2 at 5 pm.
+
+First, we will use a modified version of surveys.csv, which has some strange values entered for NAs. Download like so: 
+
+```{r, eval=FALSE}
+download.file(url = "https://raw.githubusercontent.com/BiologicalDataAnalysis2019/2022/main/vignettes/homework_2.Rmd", destfile = "/cloud/project/homeworks/homework_2.Rmd")
+```
+
+
+Each question will direct you to perform a task. Each question that expects code as an answer will have a space for you to enter the code. 
+
+You are welcome, and even encouraged, to work with a partner. I do ask, though, that every member submits their own homework. To submit your homework, simply save it. I will see it.
+
+
+## Question One - 1 point.
+
+Load in the `surveys.csv` data file that is located in your homework folder, and save it to a variable called `surveys`. Use the read_csv function in the `tidyverse` package to do this.
+
+```{r}
+#Enter your answer for Question 1 here
+
+```
+
+## Question Two - 1 point
+
+Have a look at the copy of `surveys.csv`. You will notice that there are some unusual NA values. Particularly, the "species_id" column has some odd values. Look at the help page for `read_csv`. Can you find a way to read these unusual values as NAs? Are you able to process both NA and the odd value as NAs? Try it out.
+```{r}
+#Enter your answer for Question 2 here
+
+```
+
+## Question Three - 1 point
+
+Remove the NA values from the `hindfoot_length` column using a pipe and a filter.
+```{r}
+#Enter your answer for Question 3 here
+
+```
+
+## Question Four - 2 points
+
+Verify that the NA values were removed. Don't do this by looking at the column - use code.
+```{r}
+#Enter your answer for Question 4 here
+
+```
+
+## Question Five - 1 point
+
+Explain the logic of your answer to Question Four. How did you accomplish this? 
+
+
+## Question Six - 1 point
+
+Imagine you are testing the hypothesis that mammal body sizes will be larger under climate change to decrease surface to body size ratio. First, what columns in the dataframe will you use to address this question? 
+
+
+## Question Seven - 2 points
+
+Let's try some analysis: Use a `filter`, a `group_by`, and a `summarize` to decide if you think mammal body sizes are decreasing under climate change.
+
+```{r eval=FALSE}
+
+
+```
+
+## Question Eight - 1 points
+
+Based on the outputs of question 7, does it look like mammal body sizes are decreasing over time?

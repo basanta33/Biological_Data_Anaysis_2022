@@ -1,0 +1,117 @@
+---
+title: "ProjectOne"
+output: html_document
+---
+
+
+# Data Project One
+
+## 100 points
+#DUE Sept 9 at 11:59 PM
+
+Below are the questions for the first data practical assignment. This project uses the "FossilAnts.csv" file, located in the data directory for the project. The point value of each question is denoted next to it. A blank cell is below each for your answer; feel free to create more blank cells as needed.
+
+0. (5 pts) Create a directory called `projects`, and in it, a subdirectory called `project_one`. Use `download.files` to get [this file]("https://raw.githubusercontent.com/BiologicalDataAnalysis2019/2022/main/vignettes/ProjectOne.Rmd"), and [this one](https://raw.githubusercontent.com/BiologicalDataAnalysis2019/2021/main/projects/project_one/data/FossilAnts.csv).
+
+
+1. 5 pts. Import the `tidyverse` package and load the data. The data for this part of the practical is located in the data directory. Save the data in a variable called `project_dat`. Print the data to the screen to ensure it loaded correctly.
+
+```{r}
+#Enter Your Answer Here
+
+```
+
+2. (5pts) Check the datatypes of each column. There is a column called reference number. This is a static identifier - it should not be changed, and is an indexer used to identify this specimen uniquely. Do we want to treat it as an integer (this is an opinion question - answers may vary).
+
+```
+# Answer here
+```
+
+3. (5 pts) Change the datatype of the reference number column to character. Take a peek at the function as.character().
+
+```{r}
+#Answer Here
+
+```
+
+4. (5 pts) Look at your data. What are the missing data values? In particular, have a look at the `Tribe` column. In your opinion, are these intelligent missing values for the dataset? Why or why not? If not, how would you like to change them? 
+
+```
+#Answer here
+
+```
+
+6. (5 points) Are there any columns in your dataset that contain two pieces of data? If so, identify them.
+
+```
+# Answer here
+```
+
+7. (5pts) Please look at the help page for the `separate` function.
+
+```{r}
+# Show how you would pull up the help
+```
+
+
+7. (10 pts) How could you separate one column into two? 
+
+```{r}
+#Answer here
+```
+
+Next, we will test a hypothesis. Your hypthesis is that there are more specimens in the 75 million years ago (mya) - 100 mya interval than the 30 mya to the present interval.
+
+8. (5 pts) Write out the steps you would take to address this question. Will you need to split up the data? Will you need to group the data based on the values in some column? 
+
+#Answer Here
+
+
+9. (15 pts) Perform the operations you described in (8). 
+
+```{r}
+#Answer here
+
+```
+
+10. (5 pts) Do the results of your code support the hypothesis? 
+
+```
+#Answer here
+```
+
+
+11. (10 pts) Save the dataframe with the split columns into a new directory called `project_one_data_output`. Save it as a csv file called "column_separated.csv" 
+
+```{r}
+# Answer here
+
+```
+
+12. (10 pts) Produce a histogram of the number of specimens by minimum age. Look at the geom_histogram() help.
+
+```{r}
+#Answer here
+
+```
+
+13. (5 pts) Change the font size on your histogram so that it can be read comfortably on your computer screen from five feet away. Save the file as "large_font.pdf".
+
+```{r}
+
+```
+
+14. Finally, produce a histogram of counts for each subfamily.
+
+```{r}
+
+
+```
+
+
+# Graduate Students
+
+1. You will do the above steps with the classroom dataset.
+2. Next, you will choose three data steps from above to perform with your own data. This could be grouping, mutating, cleaning NA values, visualization, or any combination of the three. 
+3. Why did you choose these steps? What function does this serve for your thesis and/or other research projects? 
+

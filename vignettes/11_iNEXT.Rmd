@@ -1,0 +1,237 @@
+---
+title: "Camera Trap Data Analysis"
+author: "Teague O'Mara, Southeastern Louisiana University"
+date: "10/22/2020"
+output: html_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+
+#Note that this function checks for the packages required for the exercise that are listed in the vector below. If a package is not present, then it will automatically install for the user.
+remotes::install_github("r-spatial/mapview")
+
+using<-function(...) {
+    libs<-unlist(list(...))
+    req<-unlist(lapply(libs,require,character.only=TRUE))
+    need<-libs[req==FALSE]
+    if(length(need)>0){ 
+        install.packages(need)
+        lapply(need,require,character.only=TRUE)
+    }
+}
+packagesInThisExercise <- c("tidyverse", "googlesheets4", "iNEXT", "fields", "sf", "mapview")
+using(packagesInThisExercise)
+```
+
+## Measuring communities through camera traps
+Camera traps are a great way to monitor species & communities. They are minimally invasive & provide a way to see what animals are doing without interfering with them. They can be deployed for long periods of time (our models will run for ~10 months on 1 set of batteries), making them a time and cost effective method for monitoring medium to large sized mammals.    
+
+We'll explore how to organize and interpret data from camera traps by first using some public data downloaded from eMammal that were taken in several habitats in Florida, including Bottomland Hardwood Forest (BLHF). This is the habitat best represented by North Oak Park. We'll compare the BLHF to other habitats in Florida to get a sense of overall mammal richness, abundance, and diversity. 
+
+```{r}
+#Download a Google Sheet of the data. FYI This will take a few minutes.
+library(tidyverse)
+library(googlesheets4)
+gs4_deauth()
+cam <- read_sheet("https://docs.google.com/spreadsheets/d/1esrbC-QqoufjlDHXtIYtDcsXovC_x6o6Z4JfBPKvg3s/edit?usp=sharing")
+```
+
+Let's have a quick look at what we have in these data
+```{r}
+dim(cam) #Dimensions of cam. How many rows & columns.
+names(cam)
+cam
+```
+There are a lot of column names that have spaces in them. This is fine for the tidyverse tibble that the data currently occupy, but R hates spaces, and are a pain for typing out since they would need quotes around them all of the time. We'll change the column names into something that is easier to use later. We'll also clean up the names of the Subprojects.
+
+```{r}
+names(cam) <- make.names(names(cam), unique = TRUE) #create good names without spaces
+
+#We need to clean up names and get rid of spaces. These search for spaces in the given column names and replace them with periods
+cam$Species.Name <- str_replace_all(cam$Species.Name, " ", ".")
+cam$Common.Name <- str_replace_all(cam$Common.Name, " ", ".")
+cam$Subproject <- str_replace_all(cam$Subproject, " ", ".")
+cam$Subproject <- str_replace_all(cam$Subproject, "/", ".") #there is one subproject name that has a /. Let's just change it to a period for consistency's sake.
+```
+
+I want to start summarizing some of the data into counts of each species type per subproject (or forest type). I only need a few of the columns, so I'm going to select those first so that I can count up the number of species found in each subproject. This will give a table with species as rows and Subprojects as columns. I have set it up this way because the package that we'll use to analyze diversity `iNEXT` requires this format.
+
+```{r}
+speciesCount <- cam %>% dplyr::select(Common.Name, Count, Subproject) %>% 
+  group_by(Common.Name, Subproject) %>% #Here I group the data by species and the subproject
+  summarize(totalCount = sum(Count)) %>% #This now gives the sum of the count of each species per subproject
+  spread(Subproject, totalCount) #Now I need to change the orientation so that species are rows and subprojects are columns. This pivots the table to do that. More explanation here: https://rpubs.com/bradleyboehmke/data_wrangling
+speciesCount
+```
+
+This now tells us how many times each species appeared on a photo sequence in each location. In our study of North Oak Park, you could substitute camera for subproject to see counts per camera location.
+
+## Richness, Abundance, & Diversity
+There are a few ways to think about communities of species and their composition. **Richness** is just the number of species that are present at site. This is an easy one -- we can just count those up. **Abundance** is the number of individuals of each species in a site. This takes a bit to calculate.  **Diversity** is a combination of richness & abundance. It can be calculated in a few different ways, but defines the different number of species in an area (richness) and its abundance and the distribution of these species in that ecosystem. It’s a measure of the variety in the ecosystem.
+
+Diversty in an ecological community can tell you a lot about what kind of community it is. Does it have a lot of different kinds of opportunities & ecological niches? Are there many types of feeding and resting habitats available?     
+
+In this exercise we'll calculate different diversity metrics to understand how mammal communities can change. We'll use the package `iNEXT` to do this. This program calculates Hill numbers that allow us to compare communities of different sizes. Hill numbers are the *effective number of species* and can be a direct reflection of older diversity metrics, but are a better measure of diversity because the non-linearity of other diversity indices (like the Shannon Diversity Index), makes it difficult to really interpret the values across many studies. Hill numbers are more straight-forward. A nice set of examples and discussion here: https://jonlefcheck.net/2012/10/23/diversity-as-effective-numbers/.  
+
+#### Abundance
+First, we'll calculate simple **Abundance** for each Subproject / Forest Type 
+```{r}
+abundance <- cam %>% group_by(Subproject) %>% 
+  filter(!is.na(Species.Name)) %>%  #filter out any NAs in the species name, just in case
+  summarize(SpeciesAbundance = length(unique(Species.Name)))
+abundance
+```
+We can see that each of the forests has 20 - 30 (ish) species, but we have no idea about the diversity, evenness, or overlap among those species. For all we know those data sets could be made of 97% white-tailed deer and 1 photo sequence each of another 18 - 32 mammal species. We can turn to `iNext` to figure some of this out. FYI, there are supposed to be 80 terrestrial mammal species in all of Florida, including bats & rodents that camera traps most likely wouldn't capture.    
+
+To make our data play nicely with `iNEXT`, it needs to be transformed slightly. This is done below.
+
+```{r}
+speciesCount[is.na(speciesCount)]=0 #This turns the NAs that come from summing 0's into real 0's for analysis
+camDiv <- as.data.frame(speciesCount) #Since iNext wants a data frame, turn the tibble into one
+rownames(camDiv) <- camDiv$Common.Name #iNext also wants the species ID as row names. 
+camDiv <- camDiv[2:6] #Now we can get rid of the species name since it's already in our row name.
+```
+
+Now that the data are in a format `iNEXT` likes, we can calculate species **Richness**. Because our data are counts, the data type is abundance. Hill numbers are calculated as: $$^{q}D = (\sum_{i=1}^{S}p_{i})^{1/(1-q)}$$
+
+Where: *S* is the number of species in the assemblage and each *i* species has the relative abundance $p_{i}$. By changing the exponent *q* we change how sensitive the equation is to relative frequencies and therefore the shape of the distribution and what it represents. *q* = 0 is Richness, *q* = 1 is the Shannon Diversity index, and *q* = 2 is the Simpson's Diversity index. More on those below.
+
+#### Richness
+So, we can calculate species **Richness** and then plot richness for each forest. 
+```{r}
+richness <- iNEXT(camDiv, q=0, datatype = "abundance") #This calculates hill numbers for the number of observations we have. q changes the expected relationship. 0 will give Richness
+ggiNEXT(richness)+
+  theme(legend.position = "right")+
+  theme_classic()
+```
+
+#### Diversity
+The first diversity index that Hill numbers calculate is equivalent to the Shannon Diversity Index. This counts all species equally, so diversity is calculated in proportion to its abundance.
+```{r}
+diversity_Shan <- iNEXT(camDiv, q=1, datatype = "abundance") #This calculates hill numbers for the number of observations we have. q changes the expected relationship. q=1 gives the Shannon Diversity index. 
+ggiNEXT(diversity_Shan)+
+  theme(legend.position = "right")+
+  theme_classic()
+```
+
+The next diversity index is Simpson's Diversity Index.  This discounts all but the most common species.
+```{r}
+diversity_Simps <- iNEXT(camDiv, q=2, datatype = "abundance") #This calculates hill numbers for the number of observations we have. q changes the expected relationship. q=2 gives the Simpsons Diversity index.  
+ggiNEXT(diversity_Simps)+
+  theme(legend.position = "right")+
+  theme_classic()
+```
+
+These can also all be run at the same time and we can look at the effects of each diversity calculation (*q*) within each site
+```{r}
+allDiversity <- iNEXT(camDiv, q=c(0, 1, 2), datatype="abundance", endpoint=7000)
+ggiNEXT(allDiversity, type=1, facet.var="site")+
+  theme_classic()
+```
+
+**Questions**    
+    
+1. Which habitats have the largest number of species?    
+    <p style="color:blue">
+    
+    
+    
+    </p>
+</br></br>
+2. What do you notice about the differences between the Shannon (*q*=1) & Simpson's (*1*=2) Diversity indices? Is their relationship (e.g., distance between them) consistent across sites?   
+    <p style="color:blue">
+    
+    
+    
+    </p>
+</br></br>
+3. Are abundance, richness, and diversity closely related to each other in these systems? Are habitats with the highest abundances the most diverse? Why or why not?   
+    <p style="color:blue">
+    
+    
+    
+    </p>
+</br></br>
+###Plotting our data in space
+These are data that were collected in a spatial context, so why not make a map? We have the latitude & longitude of each camera, so they can be plotted and colored by their habitat typel
+
+#Let's plot by deployments location and total number of species
+```{r}
+ggplot(cam, aes(x=Actual.Lon, y=Actual.Lat, color = Subproject))+
+  geom_point()+
+  theme_bw()
+```
+**Question**
+4. Are these habitats spread out or clustered together? Do you think this has any impact on the diversity measures?    
+    <p style="color:blue">
+    
+    
+    
+    </p>
+
+</br></br>   
+We can also plot the location of each camera scaled by the number of animals observed at that spot and colored by the habitat. We need to do a bit of summarizing first.
+```{r}
+deployCount <- cam %>% dplyr::select(Common.Name, Count, Deployment.ID, Actual.Lon, Actual.Lat, Subproject) %>% 
+  group_by(Deployment.ID, Actual.Lon, Actual.Lat, Subproject) %>% 
+  summarize(totalCount = sum(Count))
+
+ggplot(deployCount)+
+  geom_point(aes(x=Actual.Lon, y=Actual.Lat, size=totalCount, color=Subproject), alpha=0.5)+
+  theme_bw()
+  
+```
+
+Lastly, we can plot those data in a zoomable, interactive map
+```{r}
+library(sf)
+library(mapview)
+
+#Transform these objects into something that can be plotted with the package {sf}
+deployCount_sf <- deployCount %>% st_as_sf(coords = c("Actual.Lon", "Actual.Lat"), crs=4326)
+
+camMap <- mapview(deployCount_sf, zcol="Subproject", cex="totalCount", layer.name = "Habitat Type")
+camMap
+```
+
+
+### Now it's your turn
+Here is a link to last year's camera data from North Oak Park
+
+```{r}
+nop <- cam <- read_sheet("https://docs.google.com/spreadsheets/d/18yhZcaiYt6llg84eZYrNEewuLP3xaEyxYQQN__RQ3_4/edit?usp=sharing")
+```
+
+Using these data, copy and modify whatever code you need from above (or from the past assignments) to accomplish the following tasks. Make sure you show the code that will output the correct answers and provide any interpretation that's needed.    
+
+5. Which cameras captured the most deer? Show me on a ggplot. To do this you will need to calculate the sum for each species per camera (think grouping), then filter these for deer only. Then plot these data using ggplot with the camera locations on the x-axis (longitude) and y-axis (latitude), and scale the size or color by the number of deer captured.
+
+```{r}
+
+```
+
+</br></br>
+6. Where was the highest diversity, measured by the Shannon's Diversity Index, in the forest? Show me on a map with ggplot.
+
+```{r}
+
+```
+
+
+</br></br>
+7. What do you see from the map of diversity at each camera site? Are there any patterns? FYI, the site locations are the same (but their names are different).
+    <p style="color:blue">
+    
+    
+    
+    </p>
+
+</br></br>
+8. What other kinds of information would you want to know to understand the forest dynamics a bit more and its relationship with its surroundings?
+    <p style="color:blue">
+    
+    
+    
+    </p>
+  

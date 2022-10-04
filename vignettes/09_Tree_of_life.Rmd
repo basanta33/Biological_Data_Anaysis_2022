@@ -1,0 +1,214 @@
+---
+title: "GeneticData"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## A quick wrap-up of the git stuff from last time
+
+We'll install a package called `usethis`, which contains some helpful programming tools for the weeks ahead:
+
+```{r, eval=FALSE}
+install.packages("usethis")
+```
+
+We'll use this to create a personal access token for github. This ensures we don't have to retype our password every time we need to access GitHub.
+
+```{r, eval=FALSE}
+usethis::create_github_token() 
+```
+
+And we will use this token to access our account via RStudio.
+
+```{r, eval=FALSE}
+credentials::set_github_pat("PAT here")
+
+```
+
+Now, refresh your R session.
+
+Once this is done, we can check that this worked like so:
+
+```{r, eval=FALSE}
+usethis::git_sitrep()
+```
+
+## The Tree of Life
+
+First, we need to do some installs.
+
+```{r, eval = FALSE}
+install.packages("devtools")1
+devtools::install_github("ropensci/rotl")
+devtools::install_github("ropensci/traits")
+devtools::install_github(repo='ropensci/phylotaR', build_vignettes=TRUE)
+```
+
+Now, load your packages:
+
+
+```{r }
+library(rotl)
+library(phylotaR)
+```
+
+## Open Tree
+
+First, we're going to look for some data. Discuss with your neighbor a clade you like and want to build a tree of. For example, perhaps I really like hominids. 
+```{r echo=TRUE}
+apes <- c("Pongo", "Pan", "Gorilla", "Hoolock", "Homo")
+(resolved_names <- rotl::tnrs_match_names(apes))
+```
+Put the names of five genera into the function. If you want, you can use mine below, or pick new ones you prefer.
+
+```{r echo=TRUE}
+ants <- c("Martialis", "Atta", "Ectatomma", "Tatuidris", "Aneuretus", "Xymmer", "Aenictus")
+(resolved_names <- rotl::tnrs_match_names(ants))
+```
+
+
+Try to view them on a tree:
+
+```{r}
+tr <- tol_induced_subtree(ott_ids = ott_id(resolved_names))
+plot(tr)
+```
+
+I'm a little surprised by this tree. 
+
+## Looking for data
+
+We're going to try to build a tree of these taxa from GenBank Data. Much like accessing NOAA data, we will need to make an API Key. Go [here](https://www.ncbi.nlm.nih.gov/account/) and register.
+
+Now that we have that key, we can access NCBI:
+
+```{r}
+library(rentrez)
+entrez_search(db = "Nucleotide", term="Ectatomma", api_key ="96b569c049fe3d3055c5b747112dfec84308")
+```
+
+
+Holy moley that's a lot of data. If we do that for every taxon, we'll end up with a mess. Why don't we try to filter it a bit.
+
+
+```{r}
+Ectatomma <- entrez_search(db = "Nucleotide", term="Ectatomma AND 2018:2019[PDAT]", retmax = 100, api_key ="96b569c049fe3d3055c5b747112dfec84308")
+```
+
+So there is a good amount of data for our Ectatomma ants. We're going to download some. And this gets a little tricky. First, I want you to run each line in the loop and get a feel for what each does. What does `entrez_fetch` do? Waht does `cat` do? Feel free to look at documentation.
+
+
+```{r}
+for( seq_start in seq(1,50,100)){
+     recs <- entrez_fetch(db="nuccore", id = Ectatomma$ids,
+                          rettype="fasta", retmax=50)
+     cat(recs, file="Ect.seqs.fasta", append=TRUE)
+     cat(seq_start+49, "sequences downloaded\r")
+ }
+```
+
+Now, let's look at this file. What do we notice about it? What information is in this file?
+
+Before we move on, we're going to try one other thing. Try modifying one of the two chunks above (HINT: you will have to rerun both) in order to only get data from the mitochondrial COI gene.
+
+
+All right, let's move on to trying to write a function that will return all IDs for all of the ants.
+
+```{r, include = TRUE, eval = FALSE}
+
+search_year <- function(ant){
+    query <- paste0(ant, " AND ", "2016:2019[PDAT]")
+    search_returns <- c(entrez_search(db="Nucleotide", term=query, retmax=20,api_key ="96b569c049fe3d3055c5b747112dfec84308"))
+  return(search_returns)
+}
+
+
+ants <- as.vector(resolved_names$unique_name)
+
+labels <- sapply(ants,search_year,  USE.NAMES = T)
+
+
+```
+Have a look at ?sapply. Talk to a partner and see if you can figure out what sapply does. 
+
+So what is the problem with this output? It's hard to parse - let's make it easier to pull data for one taxon at a time.
+
+```{r, include = TRUE, eval = FALSE}
+
+search_year <- function(ant){
+    search_returns = c()
+    query <- paste0(ant, " AND ", "2016:2019[PDAT]")
+    search_returns[ant] <- c(entrez_search(db="Nucleotide", term=query, retmax=20,api_key ="96b569c049fe3d3055c5b747112dfec84308"))
+  return(search_returns)
+}
+
+
+ants <- as.vector(resolved_names$unique_name)
+
+labels <- sapply(ants,search_year,  USE.NAMES = T)
+
+```
+
+There's one remaining problem, though. Have a look at your outputs. How do you think we can fix this one? Let's have a look at when papers related to Xymmer were published:
+
+```{r, include = TRUE, eval = FALSE}
+
+xymmer_papers <- entrez_fetch(db="pmc", term="Xymmer", id = xymmer_papers$ids, retmax=20, rettype= "text", api_key ="96b569c049fe3d3055c5b747112dfec84308")
+```
+
+Does this give you a hint about something that needs to change to get more data? Make the change in the below code: 
+
+```{r, include = TRUE, eval = FALSE}
+
+search_year <- function(ant){
+    search_returns = c()
+    query <- paste0(ant, " AND ", "HINT HINT HINT:2019[PDAT]")
+    search_returns[ant] <- c(entrez_search(db="Nucleotide", term=query, retmax=1,api_key ="96b569c049fe3d3055c5b747112dfec84308"))
+  return(search_returns)
+}
+
+
+ants <- as.vector(resolved_names$unique_name)
+
+labels <- sapply(ants,search_year,  USE.NAMES = F)
+
+```
+
+Now, we're going to get the genetic data.
+
+```{r, eval = FALSE}
+
+search_seq <- function(labels){
+     recs[ant] <- entrez_fetch(db="nuccore", id = labels,
+                          rettype="fasta", retmax=1)
+     cat(recs, file="Ants.seqs.fasta", append=TRUE)
+  return(recs)
+}
+
+
+seq_returns <- sapply(labels, search_seq,  USE.NAMES = T)
+
+
+```
+What might be a problem with these data? Look carefully at the headers. Now, decide how to fix this. I suggest thinking about a common gene for phylogenetics, COI.
+
+## Just for fun
+
+Take a quick look at this output - it's a little neat. We're not going to go into building phylogenetic trees - that's a topic for Systematics. Here's a quick look at these data.
+
+```{r}
+install.packages("ape")
+coi <- ape::read.dna("Ants.seqs.fasta", format="fasta")
+```
+
+
+
+
+
+
+
+
+

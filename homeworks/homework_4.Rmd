@@ -1,0 +1,67 @@
+---
+title: "Homework Four"
+output: html_document
+---
+
+# Homework Four: Due Sept. 23 at 5 pm.
+
+First, download your homework. In your RStudio, fill in the below command:
+
+```{r, eval = FALSE}
+download.file(url = "https://raw.githubusercontent.com/BiologicalDataAnalysis2019/2022/main/vignettes/homework_4.Rmd", destfile = "C:/Users/basan/Desktop/Fall 2022/Biological_Data_Analysis/homeworks/homework_4.Rmd")
+
+```
+
+# Question One:
+
+Take a look at [this](https://github.com/ropensci/treedata.table) package. Reading the documentation, what is the primary goal of this package?
+
+    The package enables us to efficiently manipulate trait data and phylogenetic trees to make it easier for comparative analyses. 
+
+# Question Two
+
+Where in this package is the actual code stored? How do you know?
+
+    It seems like the actual code for the package is stored in the folder R. It contains some R scripts with functions for the package.
+
+# Question 3
+
+When you look into the code, are you able to understand any of it? What is one thing the authors could do to make the code more understandable?
+
+    It is somewhat understandable but I believe it can be made more informative by commenting the functions of certain lines of codes. 
+
+# Question 4
+
+What are the other directories in the package? What do they contain?
+
+    The directories that are in the package are R, data, docs, man, tests, and vignettes. 
+    R - contains the codes for functions of the package.
+    data - contains all data (raw or processed)
+    docs - contains reference documents (articles/pictures) for the package
+    man - contains R documentation files 
+    tests - contains tests for peerJ reviews
+    vignettes - contains R Markdown files for different tutorials
+
+# Question 5
+
+Do you trust that this package does what it says it is doing? Why or why not?
+
+    I do trust the functions of this package because the package is peer reviewed and also there are some error messages that is given when we make a mistake using the package. There are also some tutorials that help in understanding more about the package.
+
+# Question 6
+
+Have a look at [these](https://libguides.bc.edu/dataplan/best_practices) data storage best practices from Boston College. Have this read by Sept. 27 as we will use this in an activity.
+
+## Master's Students
+
+Find a package that does something you'd like to do for your dissertation. Apply the steps above to this package to evaluate its reliability.
+
+    A package I believe I will use for my thesis work would be [ape](https://github.com/cran/ape). It contains a lot of functions useful in working with Phylogenetic Trees.   
+
+```
+The folder structure is similar to the package we looked for the homework. The folder R consists of codes for the functions, folder data consists of data files for the package, folder inst consists of documents/tutorial pdfs and citation, folder man consists of R documents, folder src consists of c and c++ codes probably needed for compilation and folder vignettes consists of tutorials (it consists Rnw files which I had never seen before).  
+```
+
+```
+I would trust the package while using it because this package has been widely used and has several peer reviewed articles associated with it. 
+```

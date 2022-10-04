@@ -1,0 +1,152 @@
+---
+title: Functions and repeatability
+author: April Wright; Borrows heavily from Ethan White's semester long biology course
+minutes: 90
+---
+
+### Functions enable repeatability
+
+* How many of you have done something so far in the semester, and then forgotten it later? Let's discuss how to make code more permenant, reusable and readable
+    * Informative variable names
+    * Consistent indentation and line spacing
+    * Good commenting
+    * Functions
+* Write reusable code.
+    * Concise and modular script
+    * Functions with general structure 
+
+### Understandable chunks
+
+* Human brain can only hold ~7 things in memory at a given time.
+    * Write programs that don't require remembering more than ~7 things at once.
+* What do you know about how `sum(1:5)` works internally?
+    * Nothing.
+    * What do you think it does?
+    * Test your idea. Were you right? 
+* All functions should work as a single conceptual chunk, labeled in a logical way so that you don't have to remember what it does.
+
+### Reuse
+
+* Want to do the same thing repeatedly?
+    * Inefficient & error prone to copy code
+    * Even worse to rewrite it every time!
+    * If it occurs in more than one place, it will eventually be wrong somewhere.
+* Functions are written to be reusable.
+
+### Function basics
+
+```
+function_name <- function(inputs) {
+  output_value <- do_something(inputs)
+  return(output_value)
+}
+```
+
+```
+calc_shrub_vol <- function(length, width, height) {
+  volume <- length * width * height
+  return(volume)
+}
+```
+
+* Creating a function doesn't run it.
+* Call the function with some arguments.
+
+```
+calc_shrub_vol(0.8, 1.6, 2.0)
+shrub_vol <- calc_shrub_vol(0.8, 1.6, 2.0)
+```
+
+* Walk through function execution (using debugger)
+    * Call function
+	* Assign 0.8 to length, 1.6 to width, and 2.0 to height inside function
+	* Calculate volume
+	* Send the volume back as output
+	* Store it in `shrub_vol`
+
+* Treat functions like a black box.
+    * Can't access a variable that was created in a function
+        * `> width`
+        * `Error: object 'width' not found`
+    * 'Global' variables can influence function, but should not.
+        * Very confusing and error prone to use a variable that isn't passed in
+          as an argument
+
+## Exercise:
+> Type the name of a function that we have already used in  class to view the source code of the function. Can you tell what the expected inputs and outputs of the function are?
+
+
+
+### Default arguments
+
+* Defaults can be set for common inputs.
+
+```
+calc_shrub_vol <- function(length = 1, width = 1, height = 1) {
+  volume <- length * width * height
+  return(volume)
+}
+
+calc_shrub_vol()
+calc_shrub_vol(width = 2)
+calc_shrub_vol(0.8, 1.6, 2.0)
+calc_shrub_vol(height = 2.0, length = 0.8, width = 1.6)
+```
+
+### Named vs unnamed arguments
+
+* When to use or not use argument names
+
+```
+calc_shrub_vol(height = 2.0, length = 0.8, width = 1.6)
+```
+
+Or
+
+```
+calc_shrub_vol(2.0, 0.8, 1.6)
+```
+
+* You can always use names
+    * Value gets assigned to variable of that name
+    * Remember the 7 things we can hold in memory?
+* If not using names then order determines naming
+    * First value is `height`, second value is `length`...
+    * If order is hard to remember use names
+* In many cases there are *a lot* of optional arguments
+    * Convention to always name optional argument
+
+
+### Combining Functions
+
+* Each function should be single conceptual chunk of code
+* Functions can be combined to do larger tasks in two ways
+
+* Calling multiple functions in a row
+
+```
+est_shrub_mass <- function(volume){
+  mass <- 2.65 * volume^0.9
+}
+
+shrub_mass <- est_shrub_mass(calc_shrub_vol(0.8, 1.6, 2.0))
+
+library(dplyr)
+shrub_mass <- calc_shrub_vol(0.8, 1.6, 2.0) %>%
+  est_shrub_mass()
+```
+
+* Calling functions from inside other functions
+* Allows organizing function calls into logical groups
+
+```
+est_shrub_mass_dim <- function(length, width, height){
+  volume = calc_shrub_vol(length, width, height)
+  mass <- est_shrub_mass(volume)
+  return(mass)
+}
+
+est_shrub_mass_dim(0.8, 1.6, 2.0)
+```
+
+

@@ -1,0 +1,69 @@
+---
+title: 'Homework Five: Functions'
+author: "April Wright"
+date: "2022-09-23"
+output: html_document
+---
+### Basanta Khakurel
+## Due date: Sept 30, 5 PM.
+
+```{r, eval=FALSE}
+download.file(url = "https://raw.githubusercontent.com/BiologicalDataAnalysis2019/2022/main/vignettes/homework_5.Rmd", destfile = "C:/Users/basan/Desktop/Fall 2022/Biological_Data_Analysis/homeworks/homework_5.Rmd")
+```
+---
+
+This homework concerns functions.
+
+1. Make a function that reads in data and does some sort of manipulation of it. Undergrads, use the surveys dataset. Graduates, use your own data. Any manipulation is fine: selection, filtering, value removal. 
+
+```{r}
+select_data <- function(path_to_data){
+  mydata <- read_csv(path_to_data)
+  selected_data <- mydata %>%
+    select(max_pairwise_difference, max_pairwise_difference_excluding_ambiguous, max_variable_block_length, max_variable_block_length_excluding_ambiguous, min_pairwise_difference, min_pairwise_difference_excluding_ambiguous, theta, tajima_d, tajima_pi, segregating_sites)
+  return(View(selected_data))
+}
+
+```
+***
+
+2. Add a test to this function. How will you know if it worked, and alert a user if it did not?
+
+```{r}
+select_data <- function(path_to_data){
+  mydata <- read_csv(path_to_data)
+  selected_data <- mydata %>%
+    select(max_pairwise_difference, max_pairwise_difference_excluding_ambiguous, max_variable_block_length, max_variable_block_length_excluding_ambiguous, min_pairwise_difference, min_pairwise_difference_excluding_ambiguous, theta, tajima_d, tajima_pi, segregating_sites)
+  if (ncol(selected_data) == 10) {
+    return(View(selected_data))
+  } else {
+    print("Please check your data file or path")
+  }
+}
+```
+***
+
+3. Make a function that makes a plot. This can be any type of plot that we covered. Violin, box, scatter. Include the ability to save the plot to a file in the function.
+
+```{r}
+plot_func <- function(path_to_data){
+  mydata <- read.csv(path_to_data)
+  One <- ggplot(mydata, mapping = aes(x=1:nrow(mydata), y = max_pairwise_difference)) + geom_point()
+  ggsave("Plots/Max_Pairwise_Difference.pdf", plot = One, dpi = 300, limitsize = FALSE)
+  return(One)
+}
+```
+***
+
+4. For saving to a file, users of your function may want the ability to choose their file name. Make the filename an argument so that users can do so.
+
+```{r}
+plot_func <- function(path_to_data, filename.pdf){
+  mydata <- read.csv(path_to_data)
+  One <- ggplot(mydata, mapping = aes(x=1:nrow(mydata), y = max_pairwise_difference)) + geom_point()
+  ggsave(filename.pdf, plot = One, dpi = 300, limitsize = FALSE)
+  return(One)
+}
+```
+***
+***

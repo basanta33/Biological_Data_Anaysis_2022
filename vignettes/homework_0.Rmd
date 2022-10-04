@@ -1,0 +1,49 @@
+---
+title: "How to Do Homework"
+author: "April Wright"
+date: "2022-08-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Due Aug. 19th at 5pm. Simply write your answers in and save in the homeworks folder in your Rstudio.
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Homework for this class will be in RMarkdown Format
+
+Therefore, we will now learn to download the homework to your RStudio in RMarkdown Format. 
+
+Each homework will contain a link to download the homework. It will look like this: 
+
+```{r, eval=FALSE}
+
+download.file(url = "https://raw.githubusercontent.com/BiologicalDataAnalysis2019/2022/main/vignettes/homework_0.Rmd", destfile = "/cloud/project/homeworks/Homework_0.Rmd")
+```
+
+**You will run this cell once and only once.** If you run it again without changing the destfile, it will overwrite your file. You will note that the destfile specifies that we will be downloading the file into a folder called homework. We created this in class; if you did not please do so now.
+
+Download the homework. This is all I need you to do for this week's homework. 
+

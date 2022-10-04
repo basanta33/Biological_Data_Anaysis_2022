@@ -1,0 +1,17 @@
+---
+title: "Project Three"
+author: "April Wright"
+date: "11/12/2021"
+output: html_document
+---
+
+# Project Three
+# Due Nov. 30 at 5 PM
+
+
+Real simple on this one:
+
++ Write the code for each of your functions
++ Document them (Will cover this in class week of Nov. 15)
++ One test per function (Will cover this week of Nov. 15)
++ Add, commit, and push files to GitHub

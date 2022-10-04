@@ -1,0 +1,41 @@
+---
+title: "ProjectThree"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Undergrads
+
+## Part One
+
+Part One of project three will be to write two functions. One must be to query and/or process data, one must be to visualize data.
+
+Each function must be in its own .R script, and have instructions to run it.
+
+## Part Two
+
+Will be covered the week of Nov. 12
+
+# MS Students
+
+## Part One
+
+Part One of project three will be to write three functions. One must be to query and/or process data, one must be to visualize data. One can be any function of your choice related to your research.
+
+Each function must be in its own .R script, and have instructions to run it. All data to run it must be included.
+
+## Part Two
+
+Will be covered the week of Nov. 12
+
+## Part Three
+
+I need three pieces of information from you:
+
+- What else do you need covered in this class?
+- Is anyone else in your lab doing similar analyses?
+- Do you think in the future, there will be other students working on your question in your lab?
+

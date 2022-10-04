@@ -1,0 +1,171 @@
+---
+title: "Exploration"
+author: April Wright
+minutes: 90
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
+```
+Today, we're going to do something a little different than we have been doing.
+
+What we're going to be doing is learning how to link together different datasets with common data columns. We're going to begin by linking specimen occurrences, from a website called GBIF, to temperature occurrences from NOAA.
+
+
+# rNOAA
+
+We are going to get some climate data from NOAA and we'll be downloading animal occurrence data from a database called GBIF.
+
+```{r}
+
+install.packages("rnoaa")
+install.packages("rgbif")
+
+```
+
+
+
+Next, we will get an API key for accessing government data. Go to [this](https://www.ncdc.noaa.gov/cdo-web/token) website to obtain one. We will save this key in a file called `.rprofile`.
+API keys are basically like passwords between ourselves and a website. They enable us to access data securely.
+We will do this step first because sometimes getting the key emailed to you takes a moment.
+
+
+We're going to start with the animal data. So far in this class, we have been working with a dataset with all the animal names written out in a spreadsheet. In the wider world, however, there are tons of animals. Some have the same genus name. Some have the same species name. Some have the same binomial as a plant. Lovely stuff! And so, many databases implement a way to *globalize* names. Here, we are locating the unique key which connects to *Procyon lotor*, the common raccoon.
+```{r}
+library(rgbif)
+key <- name_suggest(q='Procyon lotor', rank='species')$data$key[1]
+
+```
+
+Once we have done this, we are able to use the key to query the database for records pertaining to the raccoon. To do this, we are only going to take 100 records to keep the data manageable.
+
+```{r}
+res <- occ_search(taxonKey=key, limit=500)
+
+res
+```
+
+First, look at the data visually. Do we have the amount of observations and columns we should? We should have 220 columns. Try confirming this with the `str()` command.
+
+Hoo-boy, this is an odd object. Use dollar sign indexing (`res$`) to look at some of these objects. See if you can find a way to assign the actual data table to a new object. 
+
+We are going to be particularly interested in the scientificName, decimalLatitude, and decimal Longitude columns. Create a new dataset containing only these three columns. We're going to take a quick look at a map of these data, just to get a feel for where these raccoons are. We'll install a package called `leaflet`:
+
+```{r}
+install.packages("leaflet")
+```
+
+
+
+```{r}
+library(leaflet)
+leaflet::leaflet(small_data) %>%
+addTiles() %>%
+addMarkers(~decimalLongitude, ~decimalLatitude, popup = small_data$scientificName)
+```
+We can see that these data come from all over. Next, we will try to query some temperature data for these observations. NOAA can be a little tricky to work with. So the first thing we will do is download some information on weather stations:
+
+```{r}
+stats <- rnoaa::ghcnd_stations()
+```
+
+Look carefully at the GBIF data, and then the NOAA data. Are the column names for latitude and longitude the same? Are they recorded to the same precision? If no, briefly correct these errors.
+
+```{r}
+small_data <- res$data %>% 
+  rename(latitude = decimalLatitude) %>% 
+  rename(longitude = decimalLongitude) %>% 
+  select(scientificName, latitude, longitude) %>% 
+  mutate(latitude = round(latitude)) %>% 
+  mutate(longitude = round(longitude))
+
+```
+
+Next, we will try to join these data together. We can join in several ways. All follow the same fundmental syntax:
+
+```{r}
+library(tidyverse)
+
+stations <- stats %>% 
+  mutate(latitude = round(latitude)) %>% 
+  mutate(longitude = round(longitude))
+
+joined <- small_data %>%  inner_join(stations, by = c("latitude", "longitude"))
+joined
+```
+
+Take a look at this [reference](https://dplyr.tidyverse.org/reference/mutate-joins.html), and try a couple different joins. No matter what we do, we seem to end up with many more rows than we had. Why is this? 
+
+What we'll do is remove duplicate coordinates:
+
+```{r}
+
+id_taxon <- joined %>% 
+ distinct(scientificName, latitude, longitude,  .keep_all = TRUE)
+id_taxon
+```
+
+Here, we will pause and write out for posterity:
+
+```{r}
+write_csv(id_taxon, "merged_gbif_rnoa_raccoon.csv")
+
+```
+
+We can see we still have the `id` column, which may be used to query weather. Which we will do now.
+The `ghcnd_search` function in the RNOAA package allows us to search data by weather station, temperature type, and date. The syntax looks like so:
+
+
+```{r, eval = FALSE}
+rnoaa::ghcnd_search(stationid= "AR000087078", var = "TAVG", date_min="2021-10-01", date_max = "2021-10-01")
+```
+
+How can we query a whole column of data? Let's take a moment and think about it.
+
+```{r}
+average_temps <- rnoaa::ghcnd_search(stationid= id_taxon$id, var = "TAVG", date_min="2021-10-01", date_max = "2021-10-01")
+
+```
+
+You will notice two things: Firstly, that this is once again a list of objects. Secondly, you may notice that these temps look real, real odd. They are listed in tenths of a degree centigrade. We'll convert the temperatures to Fahrenheit. Save this to your temp_data as column fahr.
+
+```{r}
+
+temp_data <- average_temps$tavg %>% 
+  mutate(fahr = (tavg/10)*9/5 + 32)
+
+```
+
+Now that we have our averages in a more sensible format, let's join them together.
+
+
+```{r}
+
+joined_temps <- temp_data %>% inner_join(id_taxon, by = "id")
+joined_temps
+```
+
+Next, let's take a look at these visually to see if this seems more normal. 
+
+```{r, eval = FALSE}
+
+ggplot(joined_temps, mapping = aes(x = latitude, y=fahr)) + geom_point() 
+```
+
+
+And we fit a linear model to see if temperature was increasing with longitude:
+
+```{r, eval = FALSE}
+
+lm(longitude~fahr, data=joined_temps)
+ggplot(joined_temps, mapping = aes(x = longitude, y=fahr)) + geom_line() + geom_smooth(method='lm')
+```
+
+
+
+
+# Exploration time:
+
+Pick one weather station and see if you can query multiple max temperature observations over time. Try plotting max temp as a function of time. Or, try plotting a different temperature measurement. Or querying more data from GBIF, or a specific locality. Maybe a favorite animal!
+
+

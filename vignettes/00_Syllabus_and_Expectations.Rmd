@@ -1,0 +1,33 @@
+---
+title: "Syllabus"
+output: html_document
+author:
+- April M. Wright
+
+---
+
+# For today, we will be talking about expectations
+
+## This course will cover the basics of: Data management in a computational framework.
+
+_Why_ do we want to do that?  
+    - Convenience: The computer is much more effective at doing repetitive tasks than our brains are  
+    - Reproducibility: A computer stores records of what we have done more effectively than our brains do  
+    - Flexibility: When you read a paper, and they're using the most cutting edge tools, those tools are probably computational tools.
+    
+## This course will cover the basics of: Communication of results  
+    _Why_ do we want to do that? 
+    - To inform colleagues: We will discuss how to generate interactive reports, and share them with stakeholders in our science.    
+    - To instruct colleagues: We will discuss how you can make your programs and data management reproducible, and how you can share not just results, but the actual work.  
+    - To inform the public: We will also talk about making posters and other visualizations meant for wider audiences. 
+    
+#  Wow, that sounds like a lot, and I've never programmed before  
+
+That's fine, we'll get there.
+
+I never thought I'd program. Like at all. I'm the first person in my family to attend and finish a 4-year college. My parents really encouraged me to go to college, but in a lot of ways, didn't know how to help. I had some really awful math and science teachers; I heard the words "Oh, girls aren't good at this" a lot. _A lot_. I started grad school at the start of the "big data" revolution, and I started in a field, statistical phylogenetics, where you have to program. And so I jumped in.
+    
+ And floundered for a long time. A long time.
+
+So my goal is that when you all go on to grad school, or industry, or medicine, or whatever, you don't have that floundering feeling. Even if you never program again, the critical thinking, mathematical thinking, and logical thinking will help you in the future.
+

@@ -1,0 +1,381 @@
+---
+title: "GBIF And Spatial Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=TRUE)
+```
+
+This week, we will be starting with geospatial data and mapping. Today, we will begin with locality data in GBIF. GBIF is a website for aggregating location data from other sources.
+
+We will work with two packages today. One is [RGBIF](https://www.gbif.org/tool/81747/rgbif), an interface to [GBIF](https://www.gbif.org/) data maintained by the [ROpenSci](https://ropensci.org/) group.
+
+```{r, eval=FALSE}
+install.packages("rgbif")
+install.packages("leaflet")
+```
+
+Later in this lesson, we will also use the `rotl` package we've seen last week.
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(rotl)
+library(rgbif)
+library(leaflet)
+library(tidyverse)
+```
+
+
+First, we're going to try an example for one ant. We will query locality data and map it in a few ways. Then, you will figure out how to make the process of mapping data iterable over a set of taxa.
+
+```{r}
+
+name_suggest("Atta mexicana")
+
+```
+
+
+Next, we're going to use `occ_search` to search the GBIF database for where these things are occurring.
+
+```{r}
+ occurences <- occ_search(taxonKey = 5035745, limit = 20)
+
+```
+
+
+Next, we will filter the resultant dataset to name and lat and longitude data.
+
+```{r}
+no_na <- occurences$data %>%
+  select(scientificName, decimalLatitude, decimalLongitude) %>% 
+  drop_na()
+
+```
+
+
+And finally, we will plot the data using `leaflet`
+
+```{r}
+k <- leaflet::leaflet(no_na) %>% 
+  addTiles() %>% 
+  addMarkers(~decimalLongitude, ~decimalLatitude, popup = no_na$scientificName)
+
+```
+
+This looks much like plotting with `ggplot` and tidyverse. That's because leaflet is based on the same principles. We establish a canvas and the data in the first line, then we add tiles (the actual map we will use), and then we add our points. When we think about it, this is quite similar to establishing a ggplot canvas, the axes, and the points to plot.
+
+One point is easy. How often do we only want one point, though? Probably, we will want to plot several species. First, with a partner, work out how to get GBIF ids for a set of taxa.
+
+```{r}
+ants <- c("Martialis", "Atta", "Ectatomma", "Tatuidris", "Aneuretus", "Xymmer", "Aenictus")
+
+#Get GBIF ids for our vector of species.
+
+
+ids <-c()
+  for (ant in ants){
+   print(ant)
+   raw <- name_suggest(ant)
+   print(raw)
+   ids[ant] <- c(raw$data$key)
+}
+
+```
+
+Now, we will get the actual specimen occurrences for these ants. Practice using an apply function to do this. Inspect the object you've queried when you've completed your loop. Have we dealt with an object like this before?
+
+```{r, eval=FALSE}
+ids <-c()
+  for (ant in ants){
+   raw <- name_suggest(ant)
+   occ_search(taxonKey = raw$data$key, limit = 10)
+}
+```
+
+This is a vector or dataframes. Each individual query made it's own dataframe. For simplicity, lets combine them into one dataframe object.
+
+```{r, eval=FALSE}
+#Combine the resultant dataframes into one large dataframe
+mega_df <- bind_rows(.id = "column_label")
+  for (ant in ants){
+   print(df$ant$data)
+}
+```
+
+Since we will be plotting these with a map, we need complete data in both columns - lat and long. Let's drop any columns without data in both.
+
+```{r, eval=FALSE}
+#Drop rows with NA values in the lat and long
+no_na <- mega_df %>%
+select(scientificName, decimalLatitude, decimalLongitude) %>%
+drop_na()
+
+```
+
+Now let's take a peek at our results!
+
+```{r, eval=FALSE}
+# Plot the dataframe of observations
+k <- leaflet::leaflet(no_na) %>%
+addTiles() %>%
+addMarkers(~decimalLongitude, ~decimalLatitude, popup = no_na$scientificName)
+
+```
+
+
+# GeoSpatial Choose Your Own Adventure
+
+Below are six code snippets to do different types of map-based plotting. With a partner, discuss what you think would be interesting or important to view in these data. Choose a block of code to modify to accomplish your visualization. We will reconvene in about 30 minutes and do a Round Robin showing everyone's maps. *Have Fun!* 
+
+```{r, eval=TRUE}
+
+leaflet(no_na) %>% 
+  addTiles() %>% 
+  addCircles(~decimalLongitude, ~decimalLatitude)
+
+```
+
+### Draw point sizes from a distribution
+
+```{r, eval=TRUE}
+
+leaflet(no_na) %>% 
+  addTiles() %>% 
+  addCircleMarkers(~decimalLongitude, ~decimalLatitude, radius = runif(100, 4, 10), color = c('red'))
+
+```
+
+### Cluster observations
+
+```{r, eval=TRUE}
+
+leaflet(no_na) %>%
+  addTiles() %>% 
+  addMarkers(~decimalLongitude, ~decimalLatitude, clusterOptions = markerClusterOptions())
+```
+
+### Size points by number of observations
+
+
+```{r, eval=TRUE}
+no_na %>% 
+  group_by(decimalLatitude) %>% 
+  mutate(n_areas = n())  %>% 
+  leaflet() %>%
+  addTiles() %>% 
+  addCircleMarkers(~decimalLongitude, ~decimalLatitude, radius = ~n_areas, color = c('red'))
+
+```
+
+
+### Color points by species
+
+```{r, eval=TRUE}
+
+pal <- colorBin(
+  palette = "Blues",
+  no_na$scientificName,
+  pretty = TRUE)
+
+levs <- factor(no_na$scientificName)
+factpal <- colorFactor(topo.colors(5), levs)
+
+no_na %>% 
+  group_by(scientificName) %>% 
+  leaflet() %>%
+  addTiles() %>% 
+  addCircleMarkers(
+    ~decimalLongitude, 
+    ~decimalLatitude,
+    color = ~factpal(scientificName),
+    stroke = FALSE, fillOpacity = 0.5
+  ) 
+
+
+```
+
+
+### Set view Width
+
+```{r, eval=TRUE}
+
+pal <- colorBin(
+  palette = "Blues",
+  no_na$scientificName,
+  pretty = TRUE)
+
+levs <- factor(no_na$scientificName)
+factpal <- colorFactor(topo.colors(5), levs)
+
+no_na %>% 
+  group_by(scientificName) %>% 
+  leaflet() %>%
+  addTiles() %>% 
+  addCircleMarkers(
+    ~decimalLongitude, 
+    ~decimalLatitude,
+    color = ~factpal(scientificName),
+    stroke = FALSE, fillOpacity = 0.5
+  ) %>% 
+    setView( lng = -100,
+            lat = 20,
+            zoom = 11 ) %>%
+  setMaxBounds( lng1 = -100,
+                lat1 = 19.432241,
+                lng2 = -98,
+                lat2 = 20 )
+
+```
+
+### Extra map color options (base maps)
+
+https://rstudio.github.io/leaflet/basemaps.html
+
+
+## Mapping a tree to space
+
+We will need one package we haven't used yet, Liam Revell's Phytools.
+
+```{r, eval=TRUE}
+devtools::install_github("liamrevell/phytools")
+```
+
+```{r}
+library(phytools)
+```
+
+
+Plotting a phylogeny to a map is a fairly simple task, but has a lot of data preparation work involved. The basic steps look like this:
+
+1) Synchronize names between GBIF and OpenTree
+2) Format GBIF data into a matrix
+3) Add branch lengths to our tree
+4) Plot
+
+
+You may have noticed that the GBIF package includes citation information in the scientificName column. We will need to remove that. To do this, let's try the `strsplit` function. This function splits a character string on a defined character and returns a vector of the elements in that character string.
+
+For example:
+
+```{r}
+my_string = "This is my string"
+split_up <- strsplit(my_string, " ")
+split_up
+```
+Try indexing this object. What do you need to do to access data? Now, with a partner, make this iterable across every row in the `scientificName` column. Then, unite the split objects into one new column called `genusSpecies`.
+
+```{r, eval=TRUE}
+split_names <- no_na %>% 
+mutate(genus = map_chr(scientificName, function(s) strsplit(s, " ")[[1]][1]))%>% mutate(species = map_chr(scientificName, function(s) strsplit(s, " ")[[1]][2])) %>% 
+unite(col = genusSpecies, genus, species)
+```
+
+If you look at the data, there are some obviously mistaken values in there. For example, BOLD is not an ant species. Let's drop that. 
+```{r, eval=TRUE}
+
+# Use ROTL to resolve names
+
+no_bold <- split_names[ grep("BOLD", split_names$genusSpecies, invert = TRUE) , ]
+
+```
+
+We also ended up with far more ant taxa than I thought. What a nice problem to have! But let's filter down to, say, five of them:
+
+```{r, eval=TRUE}
+a_couple_ants <- c("Martialis_heureka", "Atta_mexicana", "Atta_cephalotes", "Atta_sexdens", "Atta_Fabricius")
+subset_data <- no_bold %>% 
+    filter(genusSpecies %in% a_couple_ants)
+
+```
+
+Now, let's use ROTL to make sure we don't have spelling errors.
+```{r, eval=TRUE}
+reconciled_names <- rotl::tnrs_match_names(unique(subset_data$genusSpecies))
+good_names <-  reconciled_names %>%
+  drop_na()
+
+```
+
+
+Now, we will query our tree from OpenTree.
+
+```{r, eval=FALSE}
+
+tree <- rotl::tol_induced_subtree(good_names$ott_id, label="name")
+```
+
+
+Now, we must combine our GBIF data and our taxon names into a matrix, a two-dimensional data structure with fewer neat data parsing features than a dataframe or tibble. These structures are often preferred when speed is an issue. Matrices can only be one type, which means we must add the row names after generating the object.
+
+```{r eval=TRUE, include=FALSE}
+
+only_lat_long <- subset_data %>% 
+  select(decimalLatitude, decimalLongitude) %>% 
+  as.matrix()
+
+rownames(only_lat_long) <- subset_data$genusSpecies
+```
+
+
+And the big reveal! Let's overlay our OpenTree with our map:
+
+```{r, eval=FALSE}
+
+library(viridis)
+cols<-setNames(sample(viridis(n=Ntip(tree))),
+    tree$tip.label)
+
+obj<-phylo.to.map(tree,only_lat_long, plot=FALSE, direction="rightwards")
+
+```
+
+Oh no! What has gone wrong? 
+
+This tree has several quirks. Have a look at the object and see if you can spot them.
+
+```
+
+#Answer here
+
+- No branch lengths
+- Not fully bifurcating
+
+```
+
+First, let's resolve the polytomy issue. We will do this using Ape's `multi2di` function, which arbitrarily resolves polytomies. In real life, you would probably want to think about this a little more.:
+
+```{r eval=FALSE, include=FALSE}
+
+library(ape)
+tree <- multi2di(tree)
+```
+
+We'll also need to add some branch lengths. In our case, we will draw them from an exponential distribution. The exponential is often assumed to be a reasonable approximation for banch lengths - you'll hear more about this if you take my systematics lab ;) 
+
+In our case, we will use `rexp` to make the draws, and we will map them to a new attribute `edge.length` that is a standard attribute of the tree object. In reality, you would likely not want to do this for a publication quality analysis, and would want to estimate branch lengths from data. But being able to rescale branch lengths is a good skill for sensitivity and other similar analyses.
+
+```{r, eval=FALSE}
+tree$edge.length <- rexp(tree$Nnode*2)
+tree$edge.length
+
+```
+
+
+Now let's try that map again. 
+
+```{r, eval=FALSE}
+plot_object<-phylo.to.map(tree,only_lat_long, plot=FALSE, direction="rightwards")
+
+```
+
+
+Finally, we will actually plot to space.
+
+```{r, eval=FALSE}
+
+plot(plot_object,direction="rightwards",colors=cols,cex.points=c(0,1),
+    lwd=c(3,1),ftype="i")
+
+```
