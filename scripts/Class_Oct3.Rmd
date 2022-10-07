@@ -1,0 +1,57 @@
+---
+title: "Class_Oct3"
+author: "Basanta Khakurel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Class Notes Oct 4, 2022
+
+# Version Control Continued + Linear Modeling
+
+Using github.....
+
+***
+
+# Linear Modeling 
+One of the most flexible analysis to do in R
+- Using crabs.csv data set
+
+If we know the correlation of one variable with the other, could we predict one variable given that we have the other variable.
+
+$Y = \beta X + \beta_0 + \in$
+
+Linear model formula 
+
+Y is the response variable and X is the predictor variable. B is the relationship coefficient between the predictor and response. 
+
+```{r}
+setwd("~/projects/Biological_Data_Anaysis_2022/")
+library(tidyverse)
+```
+
+```{r}
+crabs <- read_csv("data/crabs.csv")
+glimpse(crabs)
+```
+
+Look at the data using a plot.
+
+```{r}
+ggplot(crabs, aes(x = carapace_length, y = body_depth)) + geom_point()
+```
+
+create a model_fit variable 
+```{r}
+model_fit <- lm(body_depth ~ carapace_length, data=crabs)
+summary(model_fit)
+```
+
+create a plot with a linear model fitting
+```{r}
+ggplot(crabs, aes(x = carapace_length, y = body_depth)) + geom_point() + geom_smooth(method = "lm", color = "navy", size = 0.5, fill = "deeppink") + labs(x= "Carapace Length(mm)", y="Body Depth(mm)", title = "Carapace Length vs Body Depth") + annotate("text", x =17, y=24, label = "R^2 == 0.966", parse=T, color = "firebrick", size = 5)+theme_bw()
+```
+
+Confidence Interval - if our data meets the assumptions of our model, then there is a 95% chance that the true data might be along that interval 
+
+

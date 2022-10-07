@@ -13,3 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Version Control 
 
+Use GitHub for backing up your files!!!!!
+
+---
+***
