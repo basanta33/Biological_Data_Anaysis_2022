@@ -26,12 +26,12 @@ Linear model formula
 Y is the response variable and X is the predictor variable. B is the relationship coefficient between the predictor and response. 
 
 ```{r}
-setwd("~/projects/Biological_Data_Anaysis_2022/")
-library(tidyverse)
+#setwd("c:/Users/basan/Desktop/Fall 2022/Biological_Data_Anaysis_2022/")
+library(tidyverse, broom)
 ```
 
-```{r}
-crabs <- read_csv("data/crabs.csv")
+```{r eval = TRUE}
+crabs <- read_csv("../data/crabs.csv")
 glimpse(crabs)
 ```
 
@@ -54,4 +54,115 @@ ggplot(crabs, aes(x = carapace_length, y = body_depth)) + geom_point() + geom_sm
 
 Confidence Interval - if our data meets the assumptions of our model, then there is a 95% chance that the true data might be along that interval 
 
+---
+---
+---
+## Oct 6 Notes 
+```{r}
+model_fit_2 <- lm(frontal_lobe ~ body_depth, data = crabs)
+
+summary(model_fit_2)
+```
+
+Plot and see the linear model fit 
+```{r}
+ggplot(crabs, aes(x = Latitude, y = body_depth))+
+  geom_point(size = 2)+ 
+  geom_smooth(method = "lm",color = "navy", size = 0.5, fill = "deeppink4") 
+```
+
+
+## Multiple Variables 
+### Additive Effect
+
+This one looks at a categorical and a numeric additive effect
+
+```{r, eval=FALSE}
+model_fit_multi <- lm(body_depth ~ color+carapace_length, data=crabs)
+
+summary(model_fit_multi)
+
+augmented_multi <- augment(model_fit_multi)
+
+#quantiles of quantile plot
+qqnorm(augmented_multi.resid)
+qqline(augmented_multi$.resid, col="red")
+
+ggplot(crabs, aes(x=carapace_length, y=body_depth, col=color))+
+  geom_point()+ 
+  scale_color_manual(values = c("blue", "orange"))+ 
+  geom_smooth(method = "lm", fill = "green")+ 
+  annotate("text", x = 15, y = 25, label = "R^2 == 0.988", parse= T, size = 4, color = "firebrick")+
+  theme_bw() 
+```
+
+Here we are looking at the plot of carapace width and body depth. 
+```{r}
+ggplot(crabs, aes(x = carapace_width, y = body_depth)) + geom_point()
+```
+
+This one looks at the additive effect of two numerical variables.
+```{r, eval=FALSE}
+model_fit <- lm(body_depth ~ carapace_width + carapace_length, data = crabs)
+
+summary(model_fit)
+
+augment(model_fit) -> augmented_fit
+qqnorm(augmented_fit$.resid)
+qqline(augmented_fit$.resid, col="red")
+
+ggplot(crabs, aes(x = carapace_length, y = body_depth, color = carapace_width)) + 
+  geom_point(size = 2) +
+  labs(x = "Carapace length (mm)", 
+       y = "Body depth (mm)",
+       color = "Carapace width (mm)") +
+  scale_color_distiller(palette = "Greens") +
+  annotate("text", x = 20, y = 30, label = "R^2 == 0.977", parse=T, size=5) + 
+  theme(legend.position = "bottom")
+```
+
+
+### Interaction Effect
+
+Numeric and Categorical Predictors
+```{r, eval=FALSE}
+model_fit <- lm(body_depth ~ carapace_length*color, data =crabs)
+
+summary(model_fit)
+
+augmented_fit <- augment(model_fit)
+qqnorm(augmented_fit$.resid)
+qqline(augmented_fit$.resid, col = "blue")
+```
+
+Numeric and Numeric Predictors          
+
+```{r, eval=FALSE}
+model_fit <- lm(body_depth ~ carapace_length*carapace_width, data =crabs)
+
+summary(model_fit)
+
+augmented_fit <- augment(model_fit)
+qqnorm(augmented_fit$.resid)
+qqline(augmented_fit$.resid, col = "blue")
+
+#Create an Interaction Plot
+crabs %>% 
+  group_by(sex, color) %>% 
+  summarize(mean_body_depth = mean(body_depth)) %>% 
+ggplot(aes(sex, mean_body_depth, color=color)) +
+  geom_point()+
+  labs(x = "Sex", y = "Mean Body Depth (mm)", color = "Crab Color") +
+  scale_color_manual(values = c("blue", "orange"))+
+  geom_path(aes(group=color))+
+  annotate("text", x=0.5, y = 15,label = "R^2 == 0.9775", parse = T)
+```
+
+```{r, eval=FALSE}
+model_fit <- lm(body_depth ~ sex*color, data =crabs)
+summary(model_fit)
+augmented_fit <- augment(model_fit)
+qqnorm(augmented_fit$.resid)
+qqline(augmented_fit$.resid, col = "blue")
+```
 

@@ -1,0 +1,20 @@
+---
+title: "HomeworkSix.Rmd"
+author: "April Wright"
+date: "2022-09-30"
+output: html_document
+---
+
+## Due: October 7, 5 PM
+
+This homework is 'simple'. 
+
+For the final project in this class, you will work with a dataset of your choosing. Possible datasets include the ants data, the surveys or this week's data, the crabs (MS students and H-Option see below). In the final project, you will write three functions in R  in a little R package.
+
+This week, I'm asking you to commit to one dataset. For this dataset, make a dictionary (New file -> Text file) telling a reader what each column is. If you have too many columns to do this, let me know and we'll work it out. Save this dictionary as a text file in your data directory.
+
+Add, commit and push your dictionary and selected datafile to GitHub. Verify visually that this worked. I will look at these online after the homework is due. 
+
+## MS and H-Option
+
+Your R package will be five functions. You'll be using a dataset from your research. If you're still having issues choosing a dataset, please see me this week so we can set a timeline to get a dataset selected.
