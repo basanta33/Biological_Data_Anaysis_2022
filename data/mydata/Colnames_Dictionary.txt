@@ -1,0 +1,43 @@
+#This file consists of dictionary for the column names. the csv file was generated from a Data-Based Posterior Predictive Simulation using a morphological character information. The PPS is generally used with molecular sequences but this one is based on morphological character information. So, some of the test statistics might not be applicable as the molecular sequence. This is why a bunch of the columns in the csv file has 0 as the test statistic.
+
+I have excluded some of the columns that are the same things. 
+
+Excluding Ambiguous means that the ambiguous characters (missing characters or gaps) are excluded.
+###############################################################################################################################################################################################
+Number Invariant Sites - This is the column which consists information with characters that have varying rates of evolution.
+Number Invariant Sites Excluding Ambiguous -
+
+Max GC - This is the number of highest Guanine-Cytosine content in the sequence.
+Max GC Excluding Ambiguous -
+
+Max Invariant Block Length - This column shows the maximum number of blocks that has no varying sites.
+Max Invariant Block Length Excluding Ambiguous -
+
+Max Pairwise Difference -This is the column with the statistic that intends to be sensitive to the model of rate-variation among site and/or among branches.
+Max Pairwise Difference Excluding Ambiguous -
+
+Max Variable Block Length - This column shows the maximum number of blocks that has varying sites.
+Max Variable Block Length Excluding Ambiguous -
+
+Min GC - This is the number of minimum Guanine-Cytosine content in the sequence.
+Min GC Excluding Ambiguous -
+
+Min Pairwise Difference - This is the column with the statistic that finds the pair of sequences that has the smallest pairwise distance.
+Min Pairwise Difference Excluding Ambiguous -
+
+Number Invariable Block - This is the number of invariable blocks in the sequence.
+Number Invariable Block Excluding Ambiguous -
+
+Mean GC - This is the average GC content over all sequences.
+Mean GC Excluding Ambiguous -
+
+Var GC - This tests if the variance in GC content between sequence is modeled plausibly.
+Var GC Excluding Ambiguous -
+
+Theta - This test statistic describes the genetic diversity in a population.
+
+Tajima-D - This test statistic is the difference between two measures of genetic diversity: the mean pairwise differences and the number of segregating sites scaled to be in a neutrally evolving population of constant size.
+
+Tajima-Pi - This is the sum of the pairwise differences divided by the number of pairs.
+
+Segregating-Sites - This test statistic show the positions that show polymorphisms between related genes in a sequence.
