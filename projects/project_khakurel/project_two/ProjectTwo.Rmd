@@ -1,0 +1,248 @@
+***
+title: "Project Two"
+output: html_document
+***
+
+## Basanta Khakurel
+
+Due Oct. 21 at 11:59 PM. 
+
+For this first part of the exam, you can either use `surveys_complete.csv` or your own data. If you are using your own data, you must have data in which you think you have a numerical predictor variable and a numerical response variable. If you are using `surveys_complete`, you can use weight and hindfoot_length for this.
+
+1) Load in your data. Which variable will you be using as a predictor, and which as a response? (5 pts)
+
+```{r}
+library(tidyverse)
+surveys <- read_csv("data/surveys_complete.csv")
+```
+
+```
+In this dataset, weight could be the predictor variable and the hindfoot_length could be the response variable. This means that we can expect the hindfoot_length to increase with increase in weight.
+```
+***
+2) Plot the two against each other with a scatter plot. Do the data appear to be related linearly? (5 pts)
+
+```{r}
+library(ggplot2)
+ggplot(surveys, aes(x = weight, y = hindfoot_length)) + geom_point()
+```
+
+```
+The data does not appear to be related linearly. 
+```
+***
+3) Fit the linear model. View the summary. (5 pts)
+
+```{r}
+model_fit <- lm(hindfoot_length ~ weight, data = surveys)
+summary(model_fit)
+```
+***
+4) Does the summary make sense? Does our model have good predictive power? Evaluate the residual standard error, intercept, and R-Squared in particular.  (10 pts)
+
+```
+For every 21 grams increase in weight, we expect the hindfoot_length to increase on average by 0.18 mm. According to the linear model, only 46.7 percent of variation in the hindfoot_length can be attributed to weight. The fitted model is $Y = 0.182X + 21.57 + \in$. 
+```
+***
+5) Plot the model on the graph. Increase the size of the text so it is comfortably readable at 5 feet. (5 pts)
+
+```
+ggplot(surveys, aes(x = weight, y = hindfoot_length)) + geom_point(size = 0.5) + geom_smooth(method = "lm", color = "navy", size = 0.5, fill = "deeppink4") + labs(x = "Weight (gm)", y = "Hindfoot Length (mm)", title = "Linear regression to predict the hindfoot length") + annotate("text", x = 20, y = 65, label = "R^2 == 0.467", parse=T, color = "firebrick", size = 10)  + theme_bw()
+```
+***
+6) Check the normality of the residuals. Do they look OK? Are we violating assumptions? (5 pts)
+
+```{r}
+library(broom)
+augmented_fit <- augment(model_fit)
+qqnorm(augmented_fit$.resid)
+qqline(augmented_fit$.resid, col = "green")  
+```
+
+```
+The residuals do not look normal and it seems like we are violating assumptions. 
+```
+***
+7) If you are using `surveys_complete`: Is there interspecific variation in the linear model? Hint: look at our prior work with facet plots. (15 pts) 
+
+If you are *not* using  `surveys_complete`: Do you think there are groupings within your data that may have a separate linear model? Try grouping the data by that variable and redoing the lm. (15 pts)
+
+```{r}
+genus_groupings <- surveys %>%
+  count(genus, weight, hindfoot_length)
+ggplot(data = genus_groupings, mapping = aes(x = weight, y = n, color = genus)) + geom_line() + facet_wrap(facets =  vars(genus))
+ggplot(data = genus_groupings, mapping = aes(x = hindfoot_length, y = n, color = genus)) +
+geom_line() + facet_wrap(facets =  vars(genus))
+```
+```
+Taking a look at both plots of weights and hindfoot_lengths separated by genus, there seems to be some interspecific variation.   
+```
+***
+***
+## Part Two
+
+In this portion, you are free to use your own data if you have a categorical predictor variable and a response variable. Otherwise, you may use the columns sex and weight in `surveys_complete`
+
+1) First, plot the data grouped by sex (5 pts)
+
+```{r}
+ggplot(surveys, aes(x = sex, y = weight, color = sex)) + 
+  geom_jitter() + 
+  labs(x = "Sex", y = "Weight (gm)") +
+  theme(legend.position = "none") +
+  stat_summary(fun.data = "mean_se", color = "black") 
+```
+***
+2) Try an ANOVA of this data (5 pt)
+
+```{r}
+model_fit <- lm(weight ~ sex, data = surveys)
+anova_model_fit <- aov(model_fit)
+summary(anova_model_fit)
+```
+***
+3) How about a linear model? What information does this give you that an ANOVA can't? (5 pts)
+
+
+```{r}
+model_fit <- lm(weight ~ sex, data = surveys)
+summary(model_fit)
+```
+
+```
+Linear Regression gives information on how related the variables are linearly, but anova does not give much information on that. 
+```
+***
+3) Plot the lm with the data, with points colored by sex. (10 pts)
+
+```{r}
+ggplot(surveys, aes(x = weight, y = hindfoot_length,color= sex)) + 
+  geom_point() + 
+  labs(x = "Weight (gm)",
+       y = "Hindfoot Length (mm)",
+       color = "Sex") + 
+  scale_color_manual(values = c("red", "blue")) +
+  geom_smooth(method = "lm") +
+  annotate("text", x = 20, y = 65, label = "R^2 == 0.00004091", parse=T, size=5)
+```
+***
+4) Choose any model we’ve looked at so far, but use two predictor variables. Perform an LM, plot the results, and state if this changes your interpretation of the relationship between variables (10 pts)
+```{r}
+crabs <- read_csv("../../../data/crabs.csv")
+model_fit <- lm(body_depth ~ carapace_width + carapace_length, data = crabs)
+summary(model_fit)
+```
+```{r}
+ggplot(crabs, aes(x = carapace_width, y = body_depth, color = carapace_length)) + geom_point(size = 1.5) + labs(x = "Carapace Width (mm)", y = "Body depth (mm)", color = "Carapace Length (mm)") + scale_color_distiller(palette = "Blues") + annotate("text", x = 30, y = 30, label = "R^2 == 0.9776", parse=T, size=10) + theme(legend.position = "right") 
+```
+```
+I used crabs data using carapace width and length as the two predictor variables for body depth. It will allow us to see impact of more than one variable to the response variable. This would definitely change the interpretation of the data because we can see effects of multiple variables to a certain variable. 
+```
+***
+## Part Three
+
+1) Add and commit this document (5 pts)
+
+```
+#In terminal 
+git add ./ProjectTwo.Rmd
+git commit -a 
+```
+
+2) Push your changes to github (10 pts)
+
+```
+# in terminal 
+git push 
+```
+***
+***
+# MS students
+
+My expectation is that you'll do this with your own data. If any part of this doesn't make sense with your data, please get in touch ASAP so we can work it out.
+
+In addition, please take one of the statistical tests we tried, and write it as a function in the `R/` folder of your last name directory. Write appropriate documentation with it. Add, commit, and push it to Github. I'll view it there.
+
+https://github.com/basanta33/Khakurel_pkg/blob/main/R/linear_model.R
+
+```
+#function
+linear_model <- function(path_to_data){
+  mydata <- read_csv(path_to_data)
+  mydata <- mydata %>% 
+    clean_names()
+  model_fit <- lm(segregating_sites ~ tajima_pi, data = mydata)
+  return(summary(model_fit))
+}
+```
+***
+***
+------------------
+My data did not fit well with the project so I am doing couple of additional work below. 
+
+Read in the simulated data 
+```{r}
+simulated_data <- read_csv("mydata/simulated_data_pps_data.csv")
+```
+
+Read in the empirical data 
+```{r}
+empirical_data <- read_csv("mydata/empirical_data_pps_data.csv")
+```
+
+Clean the names of the columns for easier work 
+```{r}
+library(janitor)
+simulated_data <- simulated_data %>%
+clean_names()
+empirical_data <- empirical_data %>%
+clean_names()
+```
+
+Select the columns with non-zero values for both simulated and empirical data 
+```{r}
+simulated_data <- simulated_data %>%
+select(max_pairwise_difference, max_pairwise_difference_excluding_ambiguous, max_variable_block_length, max_variable_block_length_excluding_ambiguous, min_pairwise_difference, min_pairwise_difference_excluding_ambiguous, theta, tajima_d, tajima_pi, segregating_sites)
+empirical_data <- empirical_data %>%
+select(max_pairwise_difference, max_pairwise_difference_excluding_ambiguous, max_variable_block_length, max_variable_block_length_excluding_ambiguous, min_pairwise_difference, min_pairwise_difference_excluding_ambiguous, theta, tajima_d, tajima_pi, segregating_sites)
+```
+
+# Plots 
+## Maximum Pairwise Difference 
+```{r}
+ggplot(simulated_data, aes(x=max_pairwise_difference)) +geom_density(alpha = 0.7,  fill="lightblue") + geom_vline(aes(xintercept=mean(empirical_data$max_pairwise_difference)), color = "blue", linetype="dashed", size = 1) + labs(title="Density curve of Mk Simulated Data:Maximum Pairwise Difference", x = "Maximum Pairwise Difference", y = "Density")  + theme_classic()
+```
+
+## Maximum Variable Block Length 
+```{r}
+ggplot(simulated_data, aes(x=max_variable_block_length)) +geom_density(alpha = 0.7,  fill="lightblue") + geom_vline(aes(xintercept=mean(empirical_data$max_variable_block_length)), color = "blue", linetype="dashed", size = 1) + labs(title="Density curve of Mk Simulated Data:Maximum Variable Block Length", x = "Maximum Variable Block Length", y = "Density")  + theme_classic()
+```
+
+## Minimum Pairwise Difference
+```{r}
+ggplot(simulated_data, aes(x=min_pairwise_difference)) +geom_density(alpha = 0.7,  fill="lightblue") + geom_vline(aes(xintercept=mean(empirical_data$min_pairwise_difference)), color = "blue", linetype="dashed", size = 1) + labs(title="Density curve of Mk Simulated Data:Minimum Pairwise Difference", x = "Minimum Pairwise Difference", y = "Density")  + theme_classic()
+```
+
+## Theta
+```{r}
+ggplot(simulated_data, aes(x=theta)) +geom_density(alpha = 0.7,  fill="lightblue") + geom_vline(aes(xintercept=mean(empirical_data$theta)), color = "blue", linetype="dashed", size = 1) + labs(title="Density curve of Mk Simulated Data:Theta", x = "Theta", y = "Density")  + theme_classic()
+```
+
+## Tajima's D 
+```{r}
+ggplot(simulated_data, aes(x=tajima_d)) +geom_density(alpha = 0.7,  fill="lightblue") + geom_vline(aes(xintercept=mean(empirical_data$tajima_d)), color = "blue", linetype="dashed", size = 1) + labs(title="Density curve of Mk Simulated Data:Tajima's D", x = "Tajima's D", y = "Density")  + theme_classic()
+```
+
+## Tajima's Pi 
+```{r}
+ggplot(simulated_data, aes(x=tajima_pi)) +geom_density(alpha = 0.7,  fill="lightblue") + geom_vline(aes(xintercept=mean(empirical_data$tajima_pi)), color = "blue", linetype="dashed", size = 1) + labs(title="Density curve of Mk Simulated Data:Tajima's Pi", x = "Tajima's Pi ", y = "Density")  + theme_classic()
+```
+
+## Segregating Sites 
+```{r}
+ggplot(simulated_data, aes(x=segregating_sites)) +geom_density(alpha = 0.7,  fill="lightblue") + geom_vline(aes(xintercept=mean(empirical_data$segregating_sites)), color = "blue", linetype="dashed", size = 1) + labs(title="Density curve of Mk Simulated Data:Segregating Sites", x = "Segregating Sites", y = "Density")  + theme_classic()
+```
+
+
+
+
