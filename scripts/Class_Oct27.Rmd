@@ -1,0 +1,82 @@
+---
+title: "Class_Oct27"
+author: "Basanta Khakurel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Class Notes Oct 27, 2022
+
+# Mapping Exploration and Simulations
+
+This week we are going to learn about mapping using the data from GBIF (Global Biodiversity Information Facility). It is the occurence data we would be plotting in the maps. 
+
+```{r, eval=FALSE}
+install.packages("rgbif")
+install.packages("leaflet") #custom plotting of data in various maps 
+```
+
+```{r}
+library(tidyverse)
+library(rgbif)
+library(leaflet)
+library(rotl)
+```
+
+This will look for the species and give a unique taxon key.
+```{r}
+name_suggest("Pituophis melanoleucus")
+```
+
+Use the returned taxon key to get some occurence data for the species. 
+```{r}
+occurences <- occ_search(taxonKey = 9187223, limit = 50)
+```
+
+remove any Na values from the dataset. 
+```{r}
+no_na <- occurences$data %>%
+  select(scientificName, decimalLatitude, decimalLongitude) %>% 
+  drop_na()
+```
+
+Plot the occurrence data into a map. The popus are the scientific names.  
+```{r}
+k <- leaflet::leaflet(no_na) %>% 
+  addTiles() %>% 
+  addMarkers(~decimalLongitude, ~decimalLatitude, popup = no_na$scientificName)
+```
+
+---
+
+Multiple Species in the plot 
+```{r}
+ants <- c("Martialis", "Atta", "Ectatomma", "Xymmer", "Aneuretus")
+```
+
+This loop looks at each of the ant genera and look up in the database.  
+Getting a vector of dataframes. 
+
+```{r}
+search_results <- list() #create an empty vector
+for (ant in ants){
+query <- name_suggest(ant, rank = "genus")
+search <- occ_search(taxonKey = query$data$key, limit = 10)
+search_results[[ant]] <- search$data
+print(search)
+}
+```
+
+Add all the dataframes together. 
+
+```{r}
+mega_df <- bind_rows(search_results)
+```
+
+```{r}
+leaflet(no_na) %>% 
+  addTiles() %>% 
+  addMarkers(~decimalLongitude, ~decimalLatitude, popup = no_na$scientificName)
+```
+
+
