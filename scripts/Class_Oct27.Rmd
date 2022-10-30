@@ -3,6 +3,8 @@ title: "Class_Oct27"
 author: "Basanta Khakurel"
 date: "`r Sys.Date()`"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Class Notes Oct 27, 2022
@@ -55,16 +57,16 @@ ants <- c("Martialis", "Atta", "Ectatomma", "Xymmer", "Aneuretus")
 ```
 
 This loop looks at each of the ant genera and look up in the database.  
-Getting a vector of dataframes. 
+Getting a vector of data frames. 
 
 ```{r}
 search_results <- list() #create an empty vector
 for (ant in ants){
-query <- name_suggest(ant, rank = "genus")
-search <- occ_search(taxonKey = query$data$key, limit = 10)
-search_results[[ant]] <- search$data
-print(search)
-}
+  query <- name_suggest(ant, rank = "genus")
+  search <- occ_search(taxonKey = query$data$key, limit = 10)
+  search_results[[ant]] <- search$data
+  print(search)
+  }
 ```
 
 Add all the data frames together. 
@@ -86,6 +88,7 @@ leaflet(no_na) %>%
 ```
 
 ---
+
 ## Choosing your own adventure (November 1)
 
 Circles instead of Tiles 
@@ -170,7 +173,7 @@ no_na %>%
                 lat2 = 20 )
 ```
 
----
+***
 
 ## Mapping a tree to space 
 ```
