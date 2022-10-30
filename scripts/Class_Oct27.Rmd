@@ -9,7 +9,7 @@ output: html_document
 
 # Mapping Exploration and Simulations
 
-This week we are going to learn about mapping using the data from GBIF (Global Biodiversity Information Facility). It is the occurence data we would be plotting in the maps. 
+This week we are going to learn about mapping using the data from GBIF (Global Biodiversity Information Facility). It is the occurrence data we would be plotting in the maps. 
 
 ```{r, eval=FALSE}
 install.packages("rgbif")
@@ -67,10 +67,16 @@ print(search)
 }
 ```
 
-Add all the dataframes together. 
+Add all the data frames together. 
 
 ```{r}
 mega_df <- bind_rows(search_results)
+```
+
+```{r}
+no_na <- mega_df %>%
+  select(scientificName, decimalLatitude, decimalLongitude) %>% 
+  drop_na()
 ```
 
 ```{r}
@@ -79,4 +85,169 @@ leaflet(no_na) %>%
   addMarkers(~decimalLongitude, ~decimalLatitude, popup = no_na$scientificName)
 ```
 
+---
+## Choosing your own adventure (November 1)
+
+Circles instead of Tiles 
+```{r}
+leaflet(no_na) %>% 
+  addTiles() %>% 
+  addCircles(~decimalLongitude, ~decimalLatitude)
+```
+
+Draw Point sizes from a distribution 
+```{r}
+leaflet(no_na) %>% 
+  addTiles() %>% 
+  addCircleMarkers(~decimalLongitude, ~decimalLatitude, radius = runif(100, 4, 10), color = c('red'))
+```
+
+Cluster Observations
+```{r}
+leaflet(no_na) %>%
+  addTiles() %>% 
+  addMarkers(~decimalLongitude, ~decimalLatitude, clusterOptions = markerClusterOptions())
+```
+
+Size points by number of observations
+```{r}
+no_na %>% 
+  group_by(decimalLatitude) %>% 
+  mutate(n_areas = n())  %>% 
+  leaflet() %>%
+  addTiles() %>% 
+  addCircleMarkers(~decimalLongitude, ~decimalLatitude, radius = ~n_areas, color = c('red'))
+```
+
+Color Points by Species 
+```{r}
+pal <- colorBin(
+  palette = "Blues",
+  no_na$scientificName,
+  pretty = TRUE)
+
+levs <- factor(no_na$scientificName)
+factpal <- colorFactor(topo.colors(5), levs)
+
+no_na %>% 
+  group_by(scientificName) %>% 
+  leaflet() %>%
+  addTiles() %>% 
+  addCircleMarkers(
+    ~decimalLongitude, 
+    ~decimalLatitude,
+    color = ~factpal(scientificName),
+    stroke = FALSE, fillOpacity = 0.5
+  ) 
+```
+
+Set view Width 
+```{r}
+pal <- colorBin(
+  palette = "Blues",
+  no_na$scientificName,
+  pretty = TRUE)
+
+levs <- factor(no_na$scientificName)
+factpal <- colorFactor(topo.colors(5), levs)
+
+no_na %>% 
+  group_by(scientificName) %>% 
+  leaflet() %>%
+  addTiles() %>% 
+  addCircleMarkers(
+    ~decimalLongitude, 
+    ~decimalLatitude,
+    color = ~factpal(scientificName),
+    stroke = FALSE, fillOpacity = 0.5
+  ) %>% 
+    setView( lng = -100,
+            lat = 20,
+            zoom = 11 ) %>%
+  setMaxBounds( lng1 = -100,
+                lat1 = 19.432241,
+                lng2 = -98,
+                lat2 = 20 )
+```
+
+---
+
+## Mapping a tree to space 
+```
+devtools::install_github("liamrevell/phytools")
+library(phytools)
+```
+
+```{R}
+split_names <- no_na %>% 
+mutate(genus = map_chr(scientificName, function(s) strsplit(s, " ")[[1]][1]))%>% mutate(species = map_chr(scientificName, function(s) strsplit(s, " ")[[1]][2])) %>% 
+unite(col = genusSpecies, genus, species)
+```
+
+
+```{r}
+# Use ROTL to resolve names
+
+no_bold <- split_names[ grep("BOLD", split_names$genusSpecies, invert = TRUE) , ]
+```
+
+```{r}
+a_couple_ants <- c("Martialis_heureka", "Ectatomma_ruidum", "Ectatomma_tuberculatum", "Aneuretus_simoni", "Ectatomma_opaciventre")
+```
+
+```{r, echo = FALSE}
+subset_data <- no_bold %>% 
+    filter(genusSpecies %in% a_couple_ants)
+```
+
+```{r}
+reconciled_names <- rotl::tnrs_match_names(unique(subset_data$genusSpecies))
+good_names <-  reconciled_names %>%
+  drop_na()
+  
+tree <- rotl::tol_induced_subtree(good_names$ott_id, label="name")
+
+plot(tree)
+```
+
+```{r,eval=FALSE}
+only_lat_long <- subset_data %>% 
+  select(decimalLatitude, decimalLongitude) %>% 
+  as.matrix()
+
+rownames(only_lat_long) <- subset_data$genusSpecies
+```
+
+```{r}
+library(viridis)
+```
+
+```{r, eval=FALSE}
+color_selection <- setNames(sample(viridis(n=Ntip(tree))),
+    tree$tip.label)
+
+obj<-phylo.to.map(tree,only_lat_long, plot=FALSE, direction="rightwards")
+plot(obj)
+```
+This does not have any branch lenghts. 
+
+Lets try again with some changes. 
+```{r}
+library(ape)
+```
+
+```{r}
+tree <- multi2di(tree)
+```
+
+```{r}
+tree$edge.length <- rexp(tree$Nnode*2)
+tree$edge.length 
+```
+
+```{r,eval=FALSE}
+plot_object <- phylo.to.map(tree, only_lat_long, plot = FALSE)
+plot_object
+plot(plot_object, direction = "rightwards", colors = color_selection, cex.points=c(0.1), lwd=c(3,1),ftype="off")
+```
 
