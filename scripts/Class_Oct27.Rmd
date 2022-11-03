@@ -174,6 +174,8 @@ no_na %>%
 ```
 
 ***
+This is after show and tell. 
+
 
 ## Mapping a tree to space 
 ```
@@ -253,4 +255,6 @@ plot_object <- phylo.to.map(tree, only_lat_long, plot = FALSE)
 plot_object
 plot(plot_object, direction = "rightwards", colors = color_selection, cex.points=c(0.1), lwd=c(3,1),ftype="off")
 ```
+
+Simulation Discussion
 
