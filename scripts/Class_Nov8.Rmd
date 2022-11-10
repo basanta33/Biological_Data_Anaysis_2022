@@ -1,0 +1,217 @@
+---
+title: "Class_Nov3"
+author: "Basanta Khakurel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Camera Trap Data Analysis and NMDS
+
+## Camera Trap Data Analysis 
+
+Look at some National Camera Traps to identify different organisms occuring in those regions. 
+Few different habitats in Florida
+
+Install `mapview` package
+```{r}
+remotes::install_github("r-spatial/mapview")
+```
+
+Load required packages
+
+```{r}
+library(tidyverse)
+library(googlesheets4)
+library(iNEXT)
+library(fields)
+library(sf)
+library(mapview)
+```
+
+Download the data
+```{r}
+gs4_deauth() #we're pulling some data that are public. So not using password.
+cam <- read_sheet("https://docs.google.com/spreadsheets/d/1esrbC-QqoufjlDHXtIYtDcsXovC_x6o6Z4JfBPKvg3s/edit?usp=sharing")
+```
+
+Lets look at the data
+```{r}
+dim(cam)
+names(cam)
+cam
+```
+
+Cleaning up the names 
+```{r}
+names(cam) <- make.names(names(cam), unique = TRUE) #create good names without spaces
+
+#We need to clean up names and get rid of spaces. These search for spaces in the given column names and replace them with periods
+cam$Species.Name <- str_replace_all(cam$Species.Name, " ", ".")
+cam$Common.Name <- str_replace_all(cam$Common.Name, " ", ".")
+cam$Subproject <- str_replace_all(cam$Subproject, " ", ".")
+cam$Subproject <- str_replace_all(cam$Subproject, "/", ".") #there is one subproject name that has a /. Let's just change it to a period for consistency's sake.
+```
+
+Summarizing counts and organizing them into subprojects or Forest Types.
+Sites in Columns and Species in Rows.
+Gathering and spreading the data. 
+Collapsing the multiple variable data to one variable statistic.
+```{r}
+speciesCount <- cam %>% 
+  select(Common.Name, Count, Subproject) %>% 
+  group_by(Common.Name, Subproject) %>% #Here I group the data by species and the subproject
+  summarize(totalCount = sum(Count)) %>% #This now gives the sum of the count of each species per subproject
+  spread(Subproject, totalCount) #Now I need to change the orientation so that species are rows and subprojects are columns. This pivots the table to do that. More explanation here: https://rpubs.com/bradleyboehmke/data_wrangling
+speciesCount
+```
+
+### Abundance for each subproject. 
+
+The number of each individual species in a particular site. 
+
+```{r}
+abundance <- cam %>% 
+  group_by(Subproject) %>% 
+  filter(!is.na(Species.Name)) %>%  #filter out any NAs in the species name, just in case
+  summarize(SpeciesAbundance = length(unique(Species.Name)))
+abundance
+```
+This metric has some shortcomings too. 
+Could be one species is really dominating with just a minority of other taxa in there. 
+Doesn't tell us how much overlap is there between the sites. 
+
+
+## Species Richness
+How much of different species are there in any particular region/sub-project. 
+
+Transform the data to match nicely with iNEXT 
+```{r}
+speciesCount[is.na(speciesCount)]=0 #This turns the NAs that come from summing 0's into real 0's for analysis
+camDiv <- as.data.frame(speciesCount) #Since iNext wants a data frame, turn the tibble into one
+rownames(camDiv) <- camDiv$Common.Name #iNext also wants the species ID as row names. 
+camDiv <- camDiv[2:6] #Now we can get rid of the species name since it's already in our row name.
+```
+
+
+Calculate Species Richness and Plot it. 
+```{r}
+richness <- iNEXT(camDiv, q=0, datatype = "abundance") #This calculates hill numbers for the number of observations we have. q changes the expected relationship. 0 will give Richness
+ggiNEXT(richness) + theme(legend.position = "right") + theme_classic()
+```
+
+### Calculate Shannon's Diversity Index
+```{r}
+diversity_Shan <- iNEXT(camDiv, q=1, datatype = "abundance") #This calculates hill numbers for the number of observations we have. q changes the expected relationship. q=1 gives the Shannon Diversity index. 
+ggiNEXT(diversity_Shan)+
+  theme(legend.position = "right")+
+  theme_classic()
+```
+s
+### Calculate Simpson's Diversity Index 
+```{r}
+diversity_Simps <- iNEXT(camDiv, q=2, datatype = "abundance") #This calculates hill numbers for the number of observations we have. q changes the expected relationship. q=2 gives the Simpsons Diversity index.  
+ggiNEXT(diversity_Simps)+
+  theme(legend.position = "right")+
+  theme_classic()
+```
+
+Looking at each diversity calculation within each site 
+```{r}
+allDiversity <- iNEXT(camDiv, q=c(0, 1, 2), datatype="abundance", endpoint=7000)
+```
+
+```{r}
+ggiNEXT(allDiversity, type=1, facet.var="site")+
+  theme_classic()
+```
+
+
+
+Plotting by deployment location and total number of species 
+```{r}
+ggplot(cam, aes(x=Actual.Lon, y=Actual.Lat, color = Subproject))+
+  geom_point()+
+  theme_bw()
+```
+
+Location of each camera scaled by numbers of animals and colored by the habitat 
+```{r}
+deployCount <- cam %>% dplyr::select(Common.Name, Count, Deployment.ID, Actual.Lon, Actual.Lat, Subproject) %>% 
+  group_by(Deployment.ID, Actual.Lon, Actual.Lat, Subproject) %>% 
+  summarize(totalCount = sum(Count))
+
+ggplot(deployCount)+
+  geom_point(aes(x=Actual.Lon, y=Actual.Lat, size=totalCount, color=Subproject), alpha=0.5)+
+  theme_bw()
+```
+
+Making a Zoomable and Interactive map.
+```{r}
+library(sf)
+library(mapview)
+
+#Transform these objects into something that can be plotted with the package {sf}
+deployCount_sf <- deployCount %>% st_as_sf(coords = c("Actual.Lon", "Actual.Lat"), crs=4326)
+
+camMap <- mapview(deployCount_sf, zcol="Subproject", cex="totalCount", layer.name = "Habitat Type")
+camMap
+```
+
+***
+***
+
+# NMDS
+
+```{r}
+library(vegan)
+```
+
+
+Vegan will expect the species names to be the columns and the site to be the row:
+
+```{r}
+speciesCount <- cam %>% 
+  select(Common.Name, Count, Subproject) %>% 
+  group_by(Common.Name, Subproject) %>% #Here I group the data by species and the subproject
+  summarize(totalCount = sum(Count)) %>% #This now gives the sum of the count of each species per subproject
+  spread(Common.Name, totalCount, fill = 0) 
+
+speciesMatrix <- data.matrix(speciesCount, rownames.force = unique(cam$Subproject))
+```
+
+Perform NMDS
+```{r}
+cam_trap_NMDS <- metaMDS(speciesMatrix)
+```
+
+Create a stressplot.
+```{r}
+stressplot(cam_trap_NMDS)
+```
+
+```{r}
+ordiplot(cam_trap_NMDS,type="n")
+orditorp(cam_trap_NMDS,display="species",col="red",air=0.01)
+orditorp(cam_trap_NMDS,display="sites",cex=1.25,air=0.01)
+```
+
+```{r}
+cols <- c('red', 'black', 'blue', 'green', 'orange')
+groups <- seq(length(speciesCount$Subproject))
+
+ordiplot(cam_trap_NMDS,type="text")
+orditorp(cam_trap_NMDS,display="sites",cex=1.25,air=0.01)
+text(cam_trap_NMDS, display = 'sites')
+```
+
+
+
+#### Your Turn 
+
+```{r}
+nop <- cam <- read_sheet("https://docs.google.com/spreadsheets/d/18yhZcaiYt6llg84eZYrNEewuLP3xaEyxYQQN__RQ3_4/edit?usp=sharing")
+```
