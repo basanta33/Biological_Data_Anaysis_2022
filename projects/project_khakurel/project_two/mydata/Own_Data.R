@@ -1,8 +1,8 @@
 ##to clean the column title
 #this package helps clean the data. e.g.- remove any spaces in the column titles
-install.packages("janitor") 
+install.packages("janitor")
 #load the package
-library(janitor) 
+library(janitor)
 #mutate the data frames with cleaner column names
 mydata2 <- mydata %>%
   clean_names()
@@ -23,8 +23,8 @@ Nine <- ggplot(mydata2, mapping = aes(x= 1:nrow(mydata2), y= tajima_pi))+geom_po
 Ten <- ggplot(mydata2, mapping = aes(x= 1:nrow(mydata2), y= segregating_sites))+geom_point()
 #this package helps to combine multiple plots to one
 library(patchwork)
-# combine all the graphs to one 
-Final <- One + Two + Three + Four + Five + Six + Seven + Eight + Nine + Ten 
+# combine all the graphs to one
+Final <- One + Two + Three + Four + Five + Six + Seven + Eight + Nine + Ten
 
 
 ##select the columns with values
@@ -38,8 +38,8 @@ View(mydata_selected)
 
 
 ***
-  # Effect Size Calculations 
-  ```{r}
+  # Effect Size Calculations
+```{r}
 statID = c("max_pairwise_difference", "max_pairwise_difference_excluding_ambiguous", "max_variable_block_length", "max_variable_block_length_excluding_ambiguous", "min_pairwise_difference", "min_pairwise_difference_excluding_ambiguous", "theta", "tajima_d", "tajima_pi", "segregating_sites")
 ```
 

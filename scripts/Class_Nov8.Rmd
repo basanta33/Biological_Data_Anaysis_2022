@@ -18,7 +18,7 @@ Few different habitats in Florida
 
 Install `mapview` package
 ```{r}
-remotes::install_github("r-spatial/mapview")
+#remotes::install_github("r-spatial/mapview")
 ```
 
 Load required packages
@@ -102,7 +102,7 @@ Calculate Species Richness and Plot it.
 richness <- iNEXT(camDiv, q=0, datatype = "abundance") #This calculates hill numbers for the number of observations we have. q changes the expected relationship. 0 will give Richness
 ggiNEXT(richness) + theme(legend.position = "right") + theme_classic()
 ```
-
+$\sum_i..j [P_i log(P_i)]
 ### Calculate Shannon's Diversity Index
 ```{r}
 diversity_Shan <- iNEXT(camDiv, q=1, datatype = "abundance") #This calculates hill numbers for the number of observations we have. q changes the expected relationship. q=1 gives the Shannon Diversity index. 
@@ -110,7 +110,7 @@ ggiNEXT(diversity_Shan)+
   theme(legend.position = "right")+
   theme_classic()
 ```
-s
+Simpsons goes from 0 to 1 
 ### Calculate Simpson's Diversity Index 
 ```{r}
 diversity_Simps <- iNEXT(camDiv, q=2, datatype = "abundance") #This calculates hill numbers for the number of observations we have. q changes the expected relationship. q=2 gives the Simpsons Diversity index.  
@@ -125,7 +125,7 @@ allDiversity <- iNEXT(camDiv, q=c(0, 1, 2), datatype="abundance", endpoint=7000)
 ```
 
 ```{r}
-ggiNEXT(allDiversity, type=1, facet.var="site")+
+ggiNEXT(allDiversity, type=1, facet.var="Assemblage")+
   theme_classic()
 ```
 
@@ -166,6 +166,7 @@ camMap
 
 # NMDS
 
+For each size what we have list of species and the number of observations.  
 ```{r}
 library(vegan)
 ```
