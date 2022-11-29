@@ -184,9 +184,12 @@ speciesCount <- cam %>%
 speciesMatrix <- data.matrix(speciesCount, rownames.force = unique(cam$Subproject))
 ```
 
+```{r}
+sm <- speciesMatrix[,-1]
+```
 Perform NMDS
 ```{r}
-cam_trap_NMDS <- metaMDS(speciesMatrix)
+cam_trap_NMDS <- metaMDS(sm)
 ```
 
 Create a stressplot.
@@ -209,6 +212,12 @@ orditorp(cam_trap_NMDS,display="sites",cex=1.25,air=0.01)
 text(cam_trap_NMDS, display = 'sites')
 ```
 
+To create a more beautiful NMDS plot
+```{r}
+scores(cam_trap_NMDS) %>%
+  cbind(speciesCount) %>% 
+  ggplot(aes(x = species.NMDS1, y = species.NMDS2)) + geom_point(aes(color = Subproject)) + stat_ellipse(type= "norm", linetype = 2, geom = "polygon", aes(group = Subproject, fill = Subproject), alpha = 0.3) + annotate("text", x=-2, y=1, label = paste0("stress", format(cam_trap_NMDS$stress, digits=4), hjust =0)) + theme_bw()
+```
 
 
 #### Your Turn 
